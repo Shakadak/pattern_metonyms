@@ -1,6 +1,6 @@
 # PatternMetonyms
 
-**TODO: Add description**
+Attempt at implementing Pattern Synonyms from [https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/pattern-synonyms-Haskell16.pdf](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/pattern-synonyms-Haskell16.pdf) but obviously missing a ton of check, most notably from the type checker.
 
 ## Installation
 
