@@ -1,13 +1,21 @@
 defmodule PatternMetonyms.MixProject do
   use Mix.Project
 
+  defp description do
+    """
+    Haskell's pattern synonyms for Elixir
+    """
+  end
+
   def project do
     [
       app: :pattern_metonyms,
       version: "0.1.0",
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      description: description(),
+      package: package(),
+      source_url: git_repository(),
     ]
   end
 
@@ -18,11 +26,17 @@ defmodule PatternMetonyms.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
-  defp deps do
+  defp package do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      licences: ["MIT"],
+      links: %{
+        "GitHub" => git_repository(),
+        "Paper" => "https://www.microsoft.com/en-us/research/publication/pattern-synonyms/",
+      },
     ]
+  end
+
+  defp git_repository do
+    "https://github.com/Shakadak/pattern_metonyms"
   end
 end
