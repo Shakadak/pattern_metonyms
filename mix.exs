@@ -28,7 +28,7 @@ defmodule PatternMetonyms.MixProject do
 
   defp package do
     [
-      licences: ["MIT"],
+      licenses: ["MIT"],
       links: %{
         "GitHub" => git_repository(),
         "Paper" => "https://www.microsoft.com/en-us/research/publication/pattern-synonyms/",
