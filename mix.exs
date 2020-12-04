@@ -16,6 +16,7 @@ defmodule PatternMetonyms.MixProject do
       description: description(),
       package: package(),
       source_url: git_repository(),
+      deps: deps(),
     ]
   end
 
@@ -23,6 +24,12 @@ defmodule PatternMetonyms.MixProject do
   def application do
     [
       extra_applications: [:logger]
+    ]
+  end
+
+  defp deps do
+    [
+      {:ex_doc, "~> 0.23.0", only: :dev, runtime: false},
     ]
   end
 
