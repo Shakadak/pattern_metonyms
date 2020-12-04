@@ -32,7 +32,7 @@ defmodule PatternMetonyms do
 
         ast_pat = unquote(Macro.escape(pat))
 
-        Macro.prewalk(ast_pat, fn x ->
+        Macro.postwalk(ast_pat, fn x ->
           case {ast_var?(x), x} do
             {false, x} -> x
             {true, {name, _, con}} ->
@@ -53,7 +53,7 @@ defmodule PatternMetonyms do
 
         ast_pat = unquote(Macro.escape(pat))
 
-        Macro.prewalk(ast_pat, fn x ->
+        Macro.postwalk(ast_pat, fn x ->
           case {ast_var?(x), x} do
             {false, x} -> x
             {true, {name, _, con}} ->
@@ -81,7 +81,7 @@ defmodule PatternMetonyms do
 
         ast_pat = unquote(Macro.escape(pat))
 
-        ast_pat_updated = Macro.prewalk(ast_pat, fn x ->
+        ast_pat_updated = Macro.postwalk(ast_pat, fn x ->
           case {ast_var?(x), x} do
             {false, x} -> x
             {true, {name, _, con}} ->
@@ -117,7 +117,7 @@ defmodule PatternMetonyms do
 
         ast_pat = unquote(Macro.escape(pat))
 
-        Macro.prewalk(ast_pat, fn x ->
+        Macro.postwalk(ast_pat, fn x ->
           case {ast_var?(x), x} do
             {false, x} -> x
             {true, {name, _, con}} ->
@@ -138,7 +138,7 @@ defmodule PatternMetonyms do
 
         ast_pat = unquote(Macro.escape(pat))
 
-        Macro.prewalk(ast_pat, fn x ->
+        Macro.postwalk(ast_pat, fn x ->
           case {ast_var?(x), x} do
             {false, x} -> x
             {true, {name, _, con}} ->
@@ -173,7 +173,7 @@ defmodule PatternMetonyms do
 
         ast_pat = unquote(Macro.escape(pat))
 
-        ast_pat_updated = Macro.prewalk(ast_pat, fn x ->
+        ast_pat_updated = Macro.postwalk(ast_pat, fn x ->
           case {ast_var?(x), x} do
             {false, x} -> x
             {true, {name, _, con}} ->
@@ -200,7 +200,7 @@ defmodule PatternMetonyms do
 
         ast_expr = unquote(Macro.escape(expr))
 
-        Macro.prewalk(ast_expr, fn x ->
+        Macro.postwalk(ast_expr, fn x ->
           case {ast_var?(x), x} do
             {false, x} -> x
             {true, {name, _, con}} ->
