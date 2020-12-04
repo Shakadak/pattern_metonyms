@@ -130,7 +130,7 @@ defmodule PatternMetonyms do
 
   This type of pattern allows the same kind of abstraction as unidirectional one, but also permit defining
   how to construct data from computation (if necessary).
-  The take the form:
+  They take the form:
   ```
   pattern (<name>(<[variables]>) <- (function -> pattern)) when <name>(<[variables]>) = builder
   ```
@@ -376,14 +376,12 @@ defmodule PatternMetonyms do
 
   view pattern (`(function -> pattern)`) may be used raw in here.
 
-      ```
       iex> import PatternMetonyms
       iex> view self() do
       ...>   (is_pid -> true) -> :ok
       ...>   _ -> :ko
       ...> end
       :ok
-      ```
 
   Remote calls are not yet supported.
   Anonymous functions are not yet supported
