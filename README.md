@@ -10,7 +10,7 @@ by adding `pattern_metonyms` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:pattern_metonyms, "~> 0.1.0"}
+    {:pattern_metonyms, "~> 0.1.1"}
   ]
 end
 ```
