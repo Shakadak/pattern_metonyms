@@ -395,8 +395,9 @@ defmodule PatternMetonyms do
   defmacro view(data, do: clauses) when is_list(clauses) do
     [last | rev_clauses] = Enum.reverse(clauses)
 
+    var_data = Macro.var(:"$view_data_#{inspect(make_ref())}", __MODULE__)
 
-    rev_tail = case view_folder(last, nil, data, __CALLER__) do
+    rev_tail = case view_folder(last, nil, var_data, __CALLER__) do
       # presumably a catch all pattern
       case_ast = {:case, [], [_, [do: [{:->, _, [[_lhs = {name, meta, con}], _rhs]}, _]]]} when is_atom(name) and is_list(meta) and is_atom(con) ->
 
@@ -407,13 +408,18 @@ defmodule PatternMetonyms do
 
       _ ->
         fail_ast = quote do
-          raise(CaseClauseError, term: unquote(data))
+          raise(CaseClauseError, term: unquote(var_data))
         end
 
         [fail_ast, last]
     end
 
-    ast = Enum.reduce(rev_tail ++ rev_clauses, fn x, acc -> view_folder(x, acc, data, __CALLER__) end)
+    view_ast = Enum.reduce(rev_tail ++ rev_clauses, fn x, acc -> view_folder(x, acc, var_data, __CALLER__) end)
+
+    ast = quote do
+      unquote(var_data) = unquote(data)
+      unquote(view_ast)
+    end
 
     ast
     #|> case do x -> _ = IO.puts("view:\n#{Macro.to_string(x)}") ; x end
