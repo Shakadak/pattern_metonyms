@@ -18,6 +18,7 @@ defmodule PatternMetonyms do
   There are three types of pattern, listed below with examples:
 
   1) Implicitly Bidirectional
+
   The simplest type of pattern, because of its symmetry requirement, it can only
   be defined using concrete data (or adapted macro). Therefore no computation is
   allowed, and they are thus compatible with `case` and function heads.
@@ -27,7 +28,6 @@ defmodule PatternMetonyms do
   ```
   where _pattern_ reuses the _variables_
 
-      ```
       iex> defmodule DoctestTPX do
       ...>   import PatternMetonyms
       ...>
@@ -73,9 +73,9 @@ defmodule PatternMetonyms do
       {:ok, :melba}
       iex> DoctestTPX.blorg([1, 2, 3])
       [1, -2, -3]
-      ```
 
   2) Unidirectional
+
   This type of pattern is read only, it may be used as abstraction over pattern matching on concrete data type
   that can not be reused to construct data, or as abstraction over views, as explained in `view/2`.
   They take the form:
@@ -86,7 +86,6 @@ defmodule PatternMetonyms do
   where _pattern_ reuses the _variables_.
   `(function -> pattern)` is called a view
 
-      ```
       iex> defmodule DoctestTPY do
       ...>   import PatternMetonyms
       ...>
@@ -126,9 +125,9 @@ defmodule PatternMetonyms do
       1
       iex> DoctestTPY.blorg([1, 2, 3])
       3
-      ```
 
   3) Explicitly bidirectional
+
   This type of pattern allows the same kind of abstraction as unidirectional one, but also permit defining
   how to construct data from computation (if necessary).
   The take the form:
@@ -138,7 +137,6 @@ defmodule PatternMetonyms do
   where _pattern_ and _builder_ reuse the _variables_.
   `(function -> pattern)` is called a view
 
-      ```
       iex> defmodule DoctestTPZ do
       ...>   import PatternMetonyms
       ...>
@@ -169,7 +167,6 @@ defmodule PatternMetonyms do
       3
       iex> DoctestTPZ.bar([1, 2, 3])
       [1, 2, -3]
-      ```
 
   Patterns using a view can not be used with `case`.
 
