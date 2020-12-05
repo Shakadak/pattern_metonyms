@@ -374,7 +374,11 @@ defmodule PatternMetonyms do
   Largely unoptimized, try to avoid side effect in your pattern definition as using them multiple time
   in `view` will repeat them, but might not later on.
 
-  view pattern (`(function -> pattern)`) may be used raw in here.
+  View pattern (`(function -> pattern)`) may be used raw in here.
+
+  View patterns are simply a pair of a function associated with a pattern
+  where the function will be applied to the data passed to `view`
+  and the result will be matched with the pattern.
 
       iex> import PatternMetonyms
       iex> view self() do
@@ -384,7 +388,9 @@ defmodule PatternMetonyms do
       :ok
 
   Remote calls are not yet supported.
-  Anonymous functions are not yet supported
+
+  Anonymous functions are not yet supported.
+
   Guards are not yet supported.
   """
   defmacro view(data, do: clauses) when is_list(clauses) do
