@@ -45,7 +45,7 @@ All notable changes to this project will be documented in this file. (Hopefully 
 Changelog format inspired by [keep-a-changelog]
 
 [keep-a-changelog]: https://github.com/olivierlacan/keep-a-changelog
-[unreleased]: https://github.com/shakadak/pattern_metonyms/compare/HEAD...v0.2.0
-[0.2.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.2.0...v0.1.1
-[0.1.1]: https://github.com/shakadak/pattern_metonyms/compare/v0.1.1...v0.1.0
-[0.1.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.1.0...b1810a9
+[unreleased]: https://github.com/shakadak/pattern_metonyms/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/shakadak/pattern_metonyms/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/shakadak/pattern_metonyms/compare/b1810a9...v0.1.0
