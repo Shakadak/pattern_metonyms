@@ -174,7 +174,7 @@ defmodule PatternMetonyms do
 
   Remote calls are not yet supported.
 
-  Unknown yet if anonymous function can be supported.
+  Unknown yet if anonymous functions can be supported.
 
   Guards within a pattern definition is considered undefined behavior,
   it may work, but it depends on the context.
