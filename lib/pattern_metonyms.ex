@@ -12,6 +12,8 @@ defmodule PatternMetonyms do
   other forms of patterns can only be used in combination with `view/2`.
   """
 
+  import PatternMetonyms.Internals
+
   @doc """
   Macro used to define pattern metonyms.
 
@@ -170,208 +172,31 @@ defmodule PatternMetonyms do
 
   Patterns using a view can not be used with `case`.
 
-  Currently does not support remote calls.
+  Remote calls are not yet supported.
+
+  Unknown yet if anonymous function can be supported.
+
+  Guards within a pattern definition is considered undefined behavior,
+  it may work, but it depends on the context.
+  Consider that if the behavior gets a specification, it would be the removal of
+  the possibility of using them. Patterns using a view pattern are the recommend
+  approach. For example:
+
+  ```
+  pattern heart(n) <- (less_than_3 -> {:ok, n})
+  ```
   """
-  # implicit bidirectional
-  defmacro pattern(_syn = {:=, _, [lhs, pat]}) do
-    {name, meta, args} = lhs
-    quote do
-      defmacro unquote({:"$pattern_metonyms_viewing_#{name}", meta, args}) do
-        ast_args = unquote(Macro.escape(args))
-        args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
-        ast_pat = unquote(Macro.escape(pat))
-
-        Macro.postwalk(ast_pat, fn x ->
-          case {ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-        #|> case do x -> _ = IO.puts("#{unquote(name)} [implicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
-      end
-
-      defmacro unquote(lhs) do
-        ast_args = unquote(Macro.escape(args))
-        args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
-        ast_pat = unquote(Macro.escape(pat))
-
-        Macro.postwalk(ast_pat, fn x ->
-          case {ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-        #|> case do x -> _ = IO.puts("#{unquote(name)} [implicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
-      end
-    end
-    #|> case do x -> _ = IO.puts("pattern [implicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
-  end
-
-  # unidirectional / with view
-  defmacro pattern({:<-, _, [lhs, view = [{:->, _, [[_], pat]}]]}) do
-    {name, meta, args} = lhs
-    quote do
-      defmacro unquote({:"$pattern_metonyms_viewing_#{name}", meta, args}) do
-        ast_args = unquote(Macro.escape(args))
-        args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
-        ast_pat = unquote(Macro.escape(pat))
-
-        ast_pat_updated = Macro.postwalk(ast_pat, fn x ->
-          case {ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-
-        ast_view = unquote(Macro.escape(view))
-
-        import Access
-        updated_view = put_in(ast_view, [at(0), elem(2), at(1)], ast_pat_updated)
-        #updated_view = [{:->, meta, [[fun], ast_pat_updated]}]
-        #|> case do x -> _ = IO.puts("#{unquote(name)} [unidirectional]:\n#{Macro.to_string(x)}") ; x end
-      end
-    end
-    #|> case do x -> _ = IO.puts("pattern [unidirectional]:\n#{Macro.to_string(x)}") ; x end
-  end
-
-  # unidirectional
-  defmacro pattern({:<-, _, [lhs, pat]}) do
-    {name, meta, args} = lhs
-    quote do
-      defmacro unquote({:"$pattern_metonyms_viewing_#{name}", meta, args}) do
-        ast_args = unquote(Macro.escape(args))
-        args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
-        ast_pat = unquote(Macro.escape(pat))
-
-        Macro.postwalk(ast_pat, fn x ->
-          case {ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-        #|> case do x -> _ = IO.puts("#{unquote(name)} [implicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
-      end
-
-      defmacro unquote(lhs) do
-        ast_args = unquote(Macro.escape(args))
-        args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
-        ast_pat = unquote(Macro.escape(pat))
-
-        Macro.postwalk(ast_pat, fn x ->
-          case {ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-        #|> case do x -> _ = IO.puts("#{unquote(name)} [implicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
-      end
-    end
-    #|> case do x -> _ = IO.puts("pattern [implicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
-  end
-
-  # explicit bidirectional / with view
-  defmacro pattern({:when, _, [{:<-, _, [lhs, view = [{:->, _, [[_], pat]}]]}, {:=, _, [lhs2, expr]}]}) do
-    {name, meta, args} = lhs
-    {^name, _meta2, args2} = lhs2
-
-    quote do
-      defmacro unquote({:"$pattern_metonyms_viewing_#{name}", meta, args}) do
-        ast_args = unquote(Macro.escape(args))
-        args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
-        ast_pat = unquote(Macro.escape(pat))
-
-        ast_pat_updated = Macro.postwalk(ast_pat, fn x ->
-          case {ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-
-        ast_view = unquote(Macro.escape(view))
-
-        import Access
-        updated_view = put_in(ast_view, [at(0), elem(2), at(1)], ast_pat_updated)
-        #updated_view = [{:->, meta, [[fun], ast_pat_updated]}]
-        #|> case do x -> _ = IO.puts("#{unquote(name)} [expr bidirectional]:\n#{Macro.to_string(x)}") ; x end
-      end
-
-      defmacro unquote(lhs2) do
-        ast_args = unquote(Macro.escape(args2))
-        args = unquote(args2)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
-        ast_expr = unquote(Macro.escape(expr))
-
-        Macro.postwalk(ast_expr, fn x ->
-          case {ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-        #|> case do x -> _ = IO.puts("#{unquote(name)} [explicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
-      end
-    end
-    #|> case do x -> _ = IO.puts("pattern [explicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
-  end
-
   defmacro pattern(ast) do
-    raise("pattern not recognized: #{Macro.to_string(ast)}")
+    PatternMetonyms.Internals.pattern_builder(ast)
   end
 
   # view
 
   @doc """
-  Macro substitute for `case/2` capable of using pattern metonyms
+  Macro substitute for `case/2` capable of using pattern metonyms.
 
   Custom `case` able to use pattern metonyms defined with this module.
-  Largely unoptimized, try to avoid side effect in your pattern definition as using them multiple time
+  Largely unoptimized, try to avoid side effect in your pattern definitions as using them multiple time
   in `view` will repeat them, but might not later on.
 
   View pattern (`(function -> pattern)`) may be used raw in here.
@@ -387,11 +212,19 @@ defmodule PatternMetonyms do
       ...> end
       :ok
 
+  Guards can be used outside of the view pattern or the pattern metonym.
+
+      iex> import PatternMetonyms
+      iex> view -3 - :rand.uniform(2) do
+      ...>   (abs -> x) when x > 3 -> :ok
+      ...>   (abs -> x) when x < 3 -> :ko
+      ...>   x -> x
+      ...> end
+      :ok
+
   Remote calls are not yet supported.
 
   Anonymous functions are not yet supported.
-
-  Guards are not yet supported.
   """
   defmacro view(data, do: clauses) when is_list(clauses) do
     [last | rev_clauses] = Enum.reverse(clauses)
@@ -427,7 +260,42 @@ defmodule PatternMetonyms do
   end
 
   @doc false
-  def view_folder({:->, _, [[[{:->, _, [[{name, meta, nil}], pat]}]], rhs]}, acc, data, _caller_env) do
+  # Bidirectional pattern matching on a clause and giving access to the metadata of the clause.
+  pattern clause_ast(meta, lhs, rhs) = {:->, meta, [[lhs], rhs]}
+
+  @doc false
+  # Bidirectional pattern matching on guard
+  pattern when_ast(meta, lhs, rhs) = {:when, meta, [lhs, rhs]}
+
+  @doc false
+  # Unidirictional pattern matching on a view's ast
+  pattern view_ast(call, pat) <- [{:->, _, [[call = {_name, _meta, nil}], pat]}]
+
+  @doc false
+  # Unidirectional pattern capable of detecting a view clause.
+  pattern clause_view(call, pat, rhs) <- clause_ast(_, view_ast(call, pat), rhs)
+
+  @doc false
+  # Unidirictional pattern matching on a guarded clause
+  pattern guarded_clause(pat, guard, rhs) <- clause_ast(_, when_ast(_, pat, guard), rhs)
+
+  @doc false
+  pattern guarded_view(call, pat, guard, rhs) <- guarded_clause(view_ast(call, pat), guard, rhs)
+
+  @doc false
+  # Clause using a view with a guard
+  def view_folder(guarded_view({name, meta, _}, pat, guard, rhs), acc, data, _caller_env) do
+    call = {name, meta, [data]}
+    quote do
+      case unquote(call) do
+        unquote(pat) when unquote(guard) -> unquote(rhs)
+        _ -> unquote(acc)
+      end
+    end
+  end
+
+  # Clause using a view
+  def view_folder(clause_view({name, meta, _}, pat, rhs), acc, data, _caller_env) do
     call = {name, meta, [data]}
     quote do
       case unquote(call) do
@@ -437,7 +305,34 @@ defmodule PatternMetonyms do
     end
   end
 
-  def view_folder({:->, meta_clause, [[{name, meta, con} = call], rhs]}, acc, data, caller_env) when is_atom(name) and is_list(meta) and is_list(con) do
+  # Clause using a call with a guard, we attempt to expand it using our internal representation
+  # if it succeeds, we use the use the result
+  # otherwise we simply do as if we know nothing
+  def view_folder(clause_ast(meta_clause, when_ast(meta_guard, call, guard), rhs), acc, data, caller_env) when is_call(call) do
+    {name, meta, con} = call
+    augmented_call = {:"$pattern_metonyms_viewing_#{name}", meta, con}
+    case Macro.expand(augmented_call, caller_env) do
+      # didn't expand because didn't exist, so we let other macros do their stuff later
+      ^augmented_call ->
+        quote do
+          case unquote(data) do
+            unquote(call) when unquote(guard) -> unquote(rhs)
+            _ -> unquote(acc)
+          end
+        end
+
+      # can this recurse indefinitely ?
+      new_call ->
+        new_clause = clause_ast(meta_clause, when_ast(meta_guard, new_call, guard), rhs)
+        view_folder(new_clause, acc, data, caller_env)
+    end
+  end
+
+  # Clause using a call, we attempt to expand it using our internal representation
+  # if it succeeds, we use the use the result
+  # otherwise we simply do as if we know nothing
+  def view_folder(clause_ast(meta_clause, call, rhs), acc, data, caller_env) when is_call(call) do
+    {name, meta, con} = call
     augmented_call = {:"$pattern_metonyms_viewing_#{name}", meta, con}
     case Macro.expand(augmented_call, caller_env) do
       # didn't expand because didn't exist, so we let other macros do their stuff later
@@ -451,12 +346,13 @@ defmodule PatternMetonyms do
 
       # can this recurse indefinitely ?
       new_call ->
-        new_clause = {:->, meta_clause, [[new_call], rhs]}
+        new_clause = clause_ast(meta_clause, new_call, rhs)
         view_folder(new_clause, acc, data, caller_env)
     end
   end
 
-  def view_folder({:->, _, [[lhs = {name, meta, con}], rhs]}, acc, data, _caller_env) when is_atom(name) and is_list(meta) and is_atom(con) do
+  # Clause without anything special
+  def view_folder(clause_ast(_, lhs, rhs), acc, data, _caller_env) do
     quote do
       case unquote(data) do
         unquote(lhs) -> unquote(rhs)
@@ -464,19 +360,4 @@ defmodule PatternMetonyms do
       end
     end
   end
-
-  def view_folder({:->, _, [[lhs], rhs]}, acc, data, _caller_env) do
-    quote do
-      case unquote(data) do
-        unquote(lhs) -> unquote(rhs)
-        _ -> unquote(acc)
-      end
-    end
-  end
-
-  # Utils
-
-  @doc false
-  def ast_var?({name, meta, con}) when is_atom(name) and is_list(meta) and is_atom(con), do: true
-  def ast_var?(_), do: false
 end
