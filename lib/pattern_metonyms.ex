@@ -170,7 +170,24 @@ defmodule PatternMetonyms do
 
   Patterns using a view can not be used with `case`.
 
-  Remote calls are not yet supported.
+  Remote function can be used within a view, but the `__MODULE__` alias won't work
+  because the expansion is not done at the usage site. It is not yet determined
+  which behavior is desired.
+
+      iex> defmodule DoctestTPA do
+      ...>   import PatternMetonyms
+      ...>
+      ...>   pattern rev_head(x) <- (Enum.reverse -> [x | _])
+      ...>
+      ...>   def blorg(xs) do
+      ...>     view xs do
+      ...>       rev_head(x) -> x
+      ...>     end
+      ...>   end
+      ...> end
+      iex> DoctestTPA.blorg([1, 2, 3])
+      3
+
 
   Unknown yet if anonymous functions can be supported.
 
@@ -220,7 +237,14 @@ defmodule PatternMetonyms do
       ...> end
       :ok
 
-  Remote calls are not yet supported.
+  Remote calls can be used directly within a view pattern.
+
+      iex> import PatternMetonyms
+      iex> view :banana do
+      ...>   (Atom.to_string -> "ba" <> _) -> :ok
+      ...>   _ -> :ko
+      ...> end
+      :ok
 
   Anonymous functions are not yet supported.
   """

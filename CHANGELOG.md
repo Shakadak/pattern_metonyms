@@ -4,10 +4,12 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
+## [0.3.0] - 2020-12-18
+
 ### Changed
 
 - Updated this changelog to try the format from [keep-a-changelog]
-- Reworked `view` to handle remote calls
+- Reworked `view` to handle remote calls, updated the doc accordingly
 
 ## [0.2.0] - 2020-12-18
 
@@ -46,7 +48,8 @@ All notable changes to this project will be documented in this file. (Hopefully 
 Changelog format inspired by [keep-a-changelog]
 
 [keep-a-changelog]: https://github.com/olivierlacan/keep-a-changelog
-[unreleased]: https://github.com/shakadak/pattern_metonyms/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/shakadak/pattern_metonyms/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/shakadak/pattern_metonyms/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/shakadak/pattern_metonyms/compare/b1810a9...v0.1.0
