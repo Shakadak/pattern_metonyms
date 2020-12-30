@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file. (Hopefully 
 ### Changed
 
 - Updated this changelog to try the format from [keep-a-changelog]
-- Reworked view to handle remote calls
+- Reworked `view` to handle remote calls
 
 ## [0.2.0] - 2020-12-18
 
