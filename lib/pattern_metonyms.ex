@@ -12,8 +12,6 @@ defmodule PatternMetonyms do
   other forms of patterns can only be used in combination with `view/2`.
   """
 
-  import PatternMetonyms.Internals
-
   @doc """
   Macro used to define pattern metonyms.
 
@@ -227,11 +225,15 @@ defmodule PatternMetonyms do
   Anonymous functions are not yet supported.
   """
   defmacro view(data, do: clauses) when is_list(clauses) do
-    [last | rev_clauses] = Enum.reverse(clauses)
+    #_ = IO.puts(Macro.to_string(clauses))
+    parsed_clauses = Enum.map(clauses, &PatternMetonyms.Ast.parse_clause/1)
+    expanded_clauses = Enum.map(parsed_clauses, fn data -> PatternMetonyms.Internals.expand_metonym(data, __CALLER__) end)
+    #_ = IO.puts(Macro.to_string(Enum.map(expanded_clauses, &PatternMetonyms.Ast.to_ast/1)))
+    [last | rev_clauses] = Enum.reverse(expanded_clauses)
 
     var_data = Macro.var(:"$view_data_#{inspect(make_ref())}", __MODULE__)
 
-    rev_tail = case view_folder(last, nil, var_data, __CALLER__) do
+    rev_tail = case PatternMetonyms.Internals.view_folder(last, nil, var_data) do
       # presumably a catch all pattern
       case_ast = {:case, [], [_, [do: [{:->, _, [[_lhs = {name, meta, con}], _rhs]}, _]]]} when is_atom(name) and is_list(meta) and is_atom(con) ->
 
@@ -248,7 +250,7 @@ defmodule PatternMetonyms do
         [fail_ast, last]
     end
 
-    view_ast = Enum.reduce(rev_tail ++ rev_clauses, fn x, acc -> view_folder(x, acc, var_data, __CALLER__) end)
+    view_ast = Enum.reduce(rev_tail ++ rev_clauses, fn x, acc -> PatternMetonyms.Internals.view_folder(x, acc, var_data) end)
 
     ast = quote do
       unquote(var_data) = unquote(data)
@@ -257,107 +259,5 @@ defmodule PatternMetonyms do
 
     ast
     #|> case do x -> _ = IO.puts("view:\n#{Macro.to_string(x)}") ; x end
-  end
-
-  @doc false
-  # Bidirectional pattern matching on a clause and giving access to the metadata of the clause.
-  pattern clause_ast(meta, lhs, rhs) = {:->, meta, [[lhs], rhs]}
-
-  @doc false
-  # Bidirectional pattern matching on guard
-  pattern when_ast(meta, lhs, rhs) = {:when, meta, [lhs, rhs]}
-
-  @doc false
-  # Unidirictional pattern matching on a view's ast
-  pattern view_ast(call, pat) <- [{:->, _, [[call = {_name, _meta, nil}], pat]}]
-
-  @doc false
-  # Unidirectional pattern capable of detecting a view clause.
-  pattern clause_view(call, pat, rhs) <- clause_ast(_, view_ast(call, pat), rhs)
-
-  @doc false
-  # Unidirictional pattern matching on a guarded clause
-  pattern guarded_clause(pat, guard, rhs) <- clause_ast(_, when_ast(_, pat, guard), rhs)
-
-  @doc false
-  pattern guarded_view(call, pat, guard, rhs) <- guarded_clause(view_ast(call, pat), guard, rhs)
-
-  @doc false
-  # Clause using a view with a guard
-  def view_folder(guarded_view({name, meta, _}, pat, guard, rhs), acc, data, _caller_env) do
-    call = {name, meta, [data]}
-    quote do
-      case unquote(call) do
-        unquote(pat) when unquote(guard) -> unquote(rhs)
-        _ -> unquote(acc)
-      end
-    end
-  end
-
-  # Clause using a view
-  def view_folder(clause_view({name, meta, _}, pat, rhs), acc, data, _caller_env) do
-    call = {name, meta, [data]}
-    quote do
-      case unquote(call) do
-        unquote(pat) -> unquote(rhs)
-        _ -> unquote(acc)
-      end
-    end
-  end
-
-  # Clause using a call with a guard, we attempt to expand it using our internal representation
-  # if it succeeds, we use the use the result
-  # otherwise we simply do as if we know nothing
-  def view_folder(clause_ast(meta_clause, when_ast(meta_guard, call, guard), rhs), acc, data, caller_env) when is_call(call) do
-    {name, meta, con} = call
-    augmented_call = {:"$pattern_metonyms_viewing_#{name}", meta, con}
-    case Macro.expand(augmented_call, caller_env) do
-      # didn't expand because didn't exist, so we let other macros do their stuff later
-      ^augmented_call ->
-        quote do
-          case unquote(data) do
-            unquote(call) when unquote(guard) -> unquote(rhs)
-            _ -> unquote(acc)
-          end
-        end
-
-      # can this recurse indefinitely ?
-      new_call ->
-        new_clause = clause_ast(meta_clause, when_ast(meta_guard, new_call, guard), rhs)
-        view_folder(new_clause, acc, data, caller_env)
-    end
-  end
-
-  # Clause using a call, we attempt to expand it using our internal representation
-  # if it succeeds, we use the use the result
-  # otherwise we simply do as if we know nothing
-  def view_folder(clause_ast(meta_clause, call, rhs), acc, data, caller_env) when is_call(call) do
-    {name, meta, con} = call
-    augmented_call = {:"$pattern_metonyms_viewing_#{name}", meta, con}
-    case Macro.expand(augmented_call, caller_env) do
-      # didn't expand because didn't exist, so we let other macros do their stuff later
-      ^augmented_call ->
-        quote do
-          case unquote(data) do
-            unquote(call) -> unquote(rhs)
-            _ -> unquote(acc)
-          end
-        end
-
-      # can this recurse indefinitely ?
-      new_call ->
-        new_clause = clause_ast(meta_clause, new_call, rhs)
-        view_folder(new_clause, acc, data, caller_env)
-    end
-  end
-
-  # Clause without anything special
-  def view_folder(clause_ast(_, lhs, rhs), acc, data, _caller_env) do
-    quote do
-      case unquote(data) do
-        unquote(lhs) -> unquote(rhs)
-        _ -> unquote(acc)
-      end
-    end
   end
 end

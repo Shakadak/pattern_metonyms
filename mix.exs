@@ -17,6 +17,7 @@ defmodule PatternMetonyms.MixProject do
       package: package(),
       source_url: git_repository(),
       deps: deps(),
+      elixirc_options: [warnings_as_errors: true],
     ]
   end
 

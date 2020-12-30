@@ -251,4 +251,161 @@ defmodule PatternMetonymsTest do
     end
     assert result == :ko
   end
+
+  test "case with remote pattern" do
+    defmodule TestRPL1 do
+      import PatternMetonyms
+
+      pattern head(x) <- [x | _]
+    end
+
+    defmodule TestRPL1.Act do
+      def foo(xs) do
+        require TestRPL1
+        case xs do
+          TestRPL1.head(n) -> {:ok, n}
+          _ -> :error
+        end
+      end
+    end
+
+    assert TestRPL1.Act.foo([1, 2, 3]) == {:ok, 1}
+  end
+
+  test "view with remote pattern" do
+    defmodule TestRPL2 do
+      import PatternMetonyms
+
+      pattern head(x) <- [x | _]
+    end
+
+    defmodule TestRPL2.Act do
+      def foo(xs) do
+        import PatternMetonyms
+        require TestRPL2
+
+        view xs do
+          TestRPL2.head(n) -> {:ok, n}
+          _ -> :error
+        end
+      end
+    end
+
+    assert TestRPL2.Act.foo([1, 2, 3]) == {:ok, 1}
+  end
+
+  test "view with remote pattern using a view" do
+    defmodule TestRVPL1 do
+      import PatternMetonyms
+
+      def reverse(xs), do: Enum.reverse(xs)
+
+      pattern rev_head(x) <- (reverse -> [x | _])
+    end
+
+    defmodule TestRVPL1.Act do
+      def foo(xs) do
+        import PatternMetonyms
+
+        # Because the ast we are given doesn't tell us
+        # where does `reverse` come from, we are forced to import
+        # the module defining `rev_head` to get access to the same `reverse` a it does
+        # but if it did import `Enum.reverse/1`, importing `TestRVPL1` wouldn't work.
+        # So later on I might add a check on the context to see if the function
+        # in the view is present in the imported scope.
+        import TestRVPL1
+
+        view xs do
+          TestRVPL1.rev_head(n) -> {:ok, n}
+          _ -> :error
+        end
+      end
+    end
+
+    assert TestRVPL1.Act.foo([1, 2, 3]) == {:ok, 3}
+  end
+
+  test "guarded view with remote pattern using a view" do
+    defmodule TestRVPL2 do
+      import PatternMetonyms
+
+      def reverse(xs), do: Enum.reverse(xs)
+
+      pattern rev_head(x) <- (reverse -> [x | _])
+    end
+
+    defmodule TestRVPL2.Act do
+      def foo(xs) do
+        import PatternMetonyms
+
+        # Because the ast we are given doesn't tell us
+        # where does `reverse` come from, we are forced to import
+        # the module defining `rev_head` to get access to the same `reverse` a it does
+        # but if it did import `Enum.reverse/1`, importing `TestRVPL1` wouldn't work.
+        # So later on I might add a check on the context to see if the function
+        # in the view is present in the imported scope.
+        import TestRVPL2
+
+        view xs do
+          TestRVPL2.rev_head(n) when n < 2 -> {:ok, n}
+          _ -> :error
+        end
+      end
+    end
+
+    assert TestRVPL2.Act.foo([1, 2, 3]) == :error
+  end
+
+  test "view with remote pattern using a remote call within a view" do
+    defmodule TestRVPL3 do
+      import PatternMetonyms
+
+      pattern rev_head(x) <- (Enum.reverse -> [x | _])
+    end
+
+    defmodule TestRVPL3.Act do
+      def foo(xs) do
+        import PatternMetonyms
+
+        # Because the ast we are given doesn't tell us
+        # where does `reverse` come from, we are forced to import
+        # the module defining `rev_head` to get access to the same `reverse` a it does
+        # but if it did import `Enum.reverse/1`, importing `TestRVPL1` wouldn't work.
+        # So later on I might add a check on the context to see if the function
+        # in the view is present in the imported scope.
+        require TestRVPL3
+
+        view xs do
+          TestRVPL3.rev_head(n) -> {:ok, n}
+          _ -> :error
+        end
+      end
+    end
+
+    assert TestRVPL3.Act.foo([1, 2, 3]) == {:ok, 3}
+  end
+
+  test "view with remote call within a view" do
+    import PatternMetonyms
+
+    xs = [1, 2, 3]
+    result = view xs do
+      (Enum.reverse -> [n | _]) -> {:ok, n}
+      _ -> :error
+    end
+
+    assert result == {:ok, 3}
+  end
+
+  test "case isomorphism" do
+    import PatternMetonyms
+
+    xs = [1, 2, 3]
+    result = view xs do
+      [x | _xs] -> x
+      [] -> 0
+    end
+
+    assert result == 1
+  end
 end

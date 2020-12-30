@@ -59,11 +59,9 @@ defmodule PatternMetonyms.Internals do
 
   # unidirectional / with view
   def pattern_builder({:<-, _, [lhs, view = [{:->, _, [[_], pat]}]]}) do
-    import Access
-
     {name, meta, args} = lhs
     unused_call = {name, meta, Enum.map(args, fn {_, m, c} -> {:_, m, c} end)}
-    incorrect_call_message = "Pattern metonym #{Macro.to_string(lhs)} can only be used inside `PatternMetonyms.view/2`."
+    incorrect_call_message = "Pattern metonym #{Macro.to_string(lhs)} can only be used inside `PatternMetonyms.view/2` clauses."
 
     quote do
       defmacro unquote(unused_call) do
@@ -212,6 +210,134 @@ defmodule PatternMetonyms.Internals do
   def pattern_builder(ast) do
     raise("pattern not recognized: #{Macro.to_string(ast)}")
   end
+
+  @doc false
+  def view_folder(data, acc, var_data) do
+    case data do
+      %{
+        type: :guarded_remote_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        module: module,
+        function: function,
+        args: args,
+      } ->
+        quote do
+          case unquote(module).unquote(function)(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) when unquote(guard) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+
+      %{
+        type: :guarded_local_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        function: function,
+        args: args,
+      } ->
+      quote do
+        case unquote(function)(unquote(var_data), unquote_splicing(args)) do
+          unquote(pat) when unquote(guard) -> unquote(expr)
+          _ -> unquote(acc)
+        end
+      end
+
+      %{
+        type: :guarded_clause,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+      } ->
+      quote do
+        case unquote(var_data) do
+          unquote(pat) when unquote(guard) -> unquote(expr)
+          _ -> unquote(acc)
+        end
+      end
+
+      %{
+        type: :remote_view,
+        guard: [],
+        expr: expr,
+        pat: pat,
+        module: module,
+        function: function,
+        args: args,
+      } ->
+        quote do
+          case unquote(module).unquote(function)(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+
+      %{
+        type: :local_view,
+        guard: [],
+        expr: expr,
+        pat: pat,
+        function: function,
+        args: args,
+      } ->
+        quote do
+          case unquote(function)(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+
+      %{
+        type: :clause,
+        guard: [],
+        expr: expr,
+        pat: pat,
+      } ->
+        quote do
+          case unquote(var_data) do
+            unquote(pat) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+
+    end
+  end
+
+  @doc false
+  def expand_metonym(%{type: type} = data, env)
+  when type in [
+    :guarded_remote_syn,
+    :guarded_local_syn,
+    :guarded_naked_syn,
+    :remote_syn,
+    :local_syn,
+    :naked_syn,
+  ]
+  do
+    transform = fn name -> :"$pattern_metonyms_viewing_#{name}" end
+    augmented_data = Map.update!(data, :function, transform)
+    augmented_ast = PatternMetonyms.Ast.to_ast(augmented_data)
+    case Macro.postwalk(augmented_ast, fn ast -> Macro.expand(ast, env) end) do
+      ^augmented_ast ->
+        data = case PatternMetonyms.Ast.to_ast(data) do
+          {:->, _, [[pat], expr]} ->
+            %{
+              type: :clause,
+              guard: [],
+              expr: expr,
+              pat: pat,
+            }
+        end
+        data
+
+      new_ast ->
+        new_data = PatternMetonyms.Ast.parse_clause(new_ast)
+        expand_metonym(new_data, env)
+    end
+  end
+  def expand_metonym(data, _env), do: data
 
   # Utils
 
