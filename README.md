@@ -2,7 +2,7 @@
 
 Attempt at implementing Pattern Synonyms from [https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/pattern-synonyms-Haskell16.pdf](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/pattern-synonyms-Haskell16.pdf) but obviously missing a ton of check, most notably from the type checker.
 
-Consider this as a personal project project until 1.0.0, you may open issues, but pull requests will be closed without check.
+Consider this as a personal project project until 1.0.0, you may open issues, but pull requests will be closed without consideration.
 
 ## Installation
 

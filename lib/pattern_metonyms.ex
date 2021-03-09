@@ -24,7 +24,7 @@ defmodule PatternMetonyms do
   allowed, and they are thus compatible with `case` and function heads.
   They take the form:
   ```
-  pattern <name>(<[variables]>) = pattern
+  pattern <name>(<[variables]>) = <pattern>
   ```
   where _pattern_ reuses the _variables_
 
@@ -80,8 +80,8 @@ defmodule PatternMetonyms do
   that can not be reused to construct data, or as abstraction over views, as explained in `view/2`.
   They take the form:
   ```
-  pattern <name>(<[variables]>) <- pattern
-  pattern <name>(<[variables]>) <- (function -> pattern)
+  pattern <name>(<[variables]>) <- <pattern>
+  pattern <name>(<[variables]>) <- (<function> -> <pattern>)
   ```
   where _pattern_ reuses the _variables_.
   `(function -> pattern)` is called a view
@@ -132,7 +132,7 @@ defmodule PatternMetonyms do
   how to construct data from computation (if necessary).
   They take the form:
   ```
-  pattern (<name>(<[variables]>) <- (function -> pattern)) when <name>(<[variables]>) = builder
+  pattern (<name>(<[variables]>) <- (<function> -> <pattern>)) when <name>(<[variables]>) = <builder>
   ```
   where _pattern_ and _builder_ reuse the _variables_.
   `(function -> pattern)` is called a view

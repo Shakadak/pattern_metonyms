@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
+### Changed
+
+- Minor doc updates
+
 ## [0.3.0] - 2020-12-18
 
 ### Changed
