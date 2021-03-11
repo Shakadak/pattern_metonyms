@@ -246,10 +246,27 @@ defmodule PatternMetonyms do
       ...> end
       :ok
 
-  Anonymous functions are not yet supported.
+  Anonymous functions can be used within a view pattern.
+  They can be either used as stored within a variable:
+
+      iex> import PatternMetonyms
+      iex> fun = &inspect(&1, pretty: &2)
+      iex> view :banana do
+      ...>   (fun.(true) -> str) -> str
+      ...> end
+      ":banana"
+
+  Or defined directly using `Kernel.SpecialForms.fn/1` only:
+
+      iex> import PatternMetonyms
+      iex> view 3 do
+      ...>   (fn x -> x + 2 end -> n) -> n + 1
+      ...> end
+      6
   """
   defmacro view(data, do: clauses) when is_list(clauses) do
-    #_ = IO.puts(Macro.to_string(clauses))
+    #_ = IO.puts("View clauses     -- #{Macro.to_string(clauses)}")
+    #_ = IO.puts("View clauses ast -- #{inspect(clauses)}")
     parsed_clauses = Enum.map(clauses, &PatternMetonyms.Ast.parse_clause/1)
     expanded_clauses = Enum.map(parsed_clauses, fn data -> PatternMetonyms.Internals.expand_metonym(data, __CALLER__) end)
     #_ = IO.puts(Macro.to_string(Enum.map(expanded_clauses, &PatternMetonyms.Ast.to_ast/1)))

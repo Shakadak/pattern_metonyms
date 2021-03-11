@@ -2,6 +2,7 @@ defmodule PatternMetonyms.Ast do
   @moduledoc false
 
   def parse_clause(ast) do
+    #_ = IO.inspect(ast, label: "parse_clause(ast)", pretty: false)
     case ast do
       {:->, _, [[{:when, _, [[{:->, _, [[{{:., _, [module = {_, _, _}, function]}, _, args}], pat]}], guard]}], expr]} ->
         %{
@@ -13,6 +14,28 @@ defmodule PatternMetonyms.Ast do
           function: function,
           args: args,
         }
+
+      {:->, _, [[{:when, _, [[{:->, _, [[{{:., _, [{name, _, context}]}, _, args}], pat]}], guard]}], expr]}
+        when is_atom(name) and is_atom(context) and is_list(args) ->
+          %{
+            type: :guarded_stored_fn_view,
+            guard: guard,
+            expr: expr,
+            pat: pat,
+            name: name,
+            args: args,
+            context: context,
+          }
+
+      {:->, _, [[{:when, _, [[{:->, _, [[{:fn, _, body}], pat]}], guard]}], expr]}
+        when is_list(body) ->
+          %{
+            type: :guarded_raw_fn_view,
+            guard: guard,
+            expr: expr,
+            pat: pat,
+            body: body,
+          }
 
       {:->, _, [[{:when, _, [[{:->, _, [[{name, meta, args}], pat]}], guard]}], expr]}
         when is_atom(name)
@@ -92,6 +115,28 @@ defmodule PatternMetonyms.Ast do
           function: function,
           args: args,
         }
+
+        {:->, _, [[[{:->, _, [[{{:., _, [{name, _, context}]}, _, args}], pat]}]], expr]}
+        when is_atom(name) and is_atom(context) and is_list(args) ->
+          %{
+            type: :stored_fn_view,
+            guard: [],
+            expr: expr,
+            pat: pat,
+            name: name,
+            context: context,
+            args: args,
+          }
+
+        {:->, _, [[[{:->, _, [[{:fn, _, body}], pat]}]], expr]}
+          when is_list(body) ->
+            %{
+              type: :raw_fn_view,
+              guard: [],
+              expr: expr,
+              pat: pat,
+              body: body,
+            }
 
         {:->, _, [[[{:->, _, [[{name, meta, args}], pat]}]], expr]}
         when is_atom(name)
@@ -178,6 +223,26 @@ defmodule PatternMetonyms.Ast do
       {:->, [], [[{:when, [], [[{:->, [], [[{{:., [], [module, function]}, [], args}], pat]}], guard]}], expr]}
 
         %{
+          type: :guarded_stored_fn_view,
+          guard: guard,
+          expr: expr,
+          pat: pat,
+          name: name,
+          args: args,
+          context: context,
+        } ->
+      {:->, [], [[{:when, [], [[{:->, [], [[{{:., [], [{name, [], context}]}, [], args}], pat]}], guard]}], expr]}
+
+      %{
+        type: :guarded_raw_fn_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        body: body,
+      } ->
+      {:->, [], [[{:when, [], [[{:->, [], [[{:fn, [], body}], pat]}], guard]}], expr]}
+
+        %{
           type: :guarded_local_view,
           guard: guard,
           expr: expr,
@@ -233,6 +298,26 @@ defmodule PatternMetonyms.Ast do
           args: args,
         } ->
         {:->, [], [[[{:->, [], [[{{:., [], [module, function]}, [], args}], pat]}]], expr]}
+
+        %{
+          type: :stored_fn_view,
+          guard: [],
+          expr: expr,
+          pat: pat,
+          name: name,
+          context: context,
+          args: args,
+        } ->
+        {:->, [], [[[{:->, [], [[{{:., [], [{name, [], context}]}, [], args}], pat]}]], expr]}
+
+        %{
+          type: :raw_fn_view,
+          guard: [],
+          expr: expr,
+          pat: pat,
+          body: body,
+        } ->
+        {:->, [], [[[{:->, [], [[{:fn, [], body}], pat]}]], expr]}
 
         %{
           type: :local_view,

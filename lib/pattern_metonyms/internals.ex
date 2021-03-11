@@ -213,6 +213,7 @@ defmodule PatternMetonyms.Internals do
 
   @doc false
   def view_folder(data, acc, var_data) do
+    #_ = IO.inspect(data, label: "view_folder(data, _, _)")
     case data do
       %{
         type: :guarded_remote_view,
@@ -225,6 +226,36 @@ defmodule PatternMetonyms.Internals do
       } ->
         quote do
           case unquote(module).unquote(function)(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) when unquote(guard) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+
+      %{
+        type: :guarded_stored_fn_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        name: name,
+        args: args,
+        context: context,
+      } ->
+        quote do
+          case unquote({name, [], context}).(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) when unquote(guard) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+
+      %{
+        type: :guarded_raw_fn_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        body: body,
+      } ->
+        quote do
+          case (unquote({:fn, [], body})).(unquote(var_data)) do
             unquote(pat) when unquote(guard) -> unquote(expr)
             _ -> unquote(acc)
           end
@@ -269,6 +300,36 @@ defmodule PatternMetonyms.Internals do
       } ->
         quote do
           case unquote(module).unquote(function)(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+
+      %{
+        type: :stored_fn_view,
+        guard: [],
+        expr: expr,
+        pat: pat,
+        name: name,
+        context: context,
+        args: args,
+      } ->
+      quote do
+        case unquote({name, [], context}).(unquote(var_data), unquote_splicing(args)) do
+          unquote(pat) -> unquote(expr)
+          _ -> unquote(acc)
+        end
+      end
+
+      %{
+        type: :raw_fn_view,
+        guard: [],
+        expr: expr,
+        pat: pat,
+        body: body,
+      } ->
+        quote do
+          case (unquote({:fn, [], body})).(unquote(var_data)) do
             unquote(pat) -> unquote(expr)
             _ -> unquote(acc)
           end
