@@ -84,4 +84,16 @@ defmodule CaseCompatibleTest do
 
     assert TestRPL1.Act.foo([1, 2, 3]) == {:ok, 1}
   end
+
+  test "case isomorphism" do
+    import PatternMetonyms
+
+    xs = [1, 2, 3]
+    result = view xs do
+      [x | _xs] -> x
+      [] -> 0
+    end
+
+    assert result == 1
+  end
 end

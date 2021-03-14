@@ -89,18 +89,6 @@ defmodule RemoteViewTest do
     assert result == {:ok, 3}
   end
 
-  test "case isomorphism" do
-    import PatternMetonyms
-
-    xs = [1, 2, 3]
-    result = view xs do
-      [x | _xs] -> x
-      [] -> 0
-    end
-
-    assert result == 1
-  end
-
   test "view with remote pattern using a remote call within an explicitly bidirectional pattern" do
     defmodule TestRVPL4 do
       import PatternMetonyms
