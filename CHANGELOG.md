@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
+### Changed
+
+- Implementation details, using new dependency
+
 ## [0.3.1] - 2021-03-11
 
 ### Changed

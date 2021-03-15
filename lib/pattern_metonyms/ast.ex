@@ -2,9 +2,11 @@ defmodule PatternMetonyms.Ast do
   @moduledoc false
 
   def parse_clause(ast) do
+    import Circe
+
     #_ = IO.inspect(ast, label: "parse_clause(ast)", pretty: false)
     case ast do
-      {:->, _, [[{:when, _, [[{:->, _, [[{{:., _, [module = {_, _, _}, function]}, _, args}], pat]}], guard]}], expr]} ->
+      ~m|((#{{_, _, _} = module}.#{function}(#{[spliced: args]}) -> #{pat}) when #{guard} -> #{expr})|w ->
         %{
           type: :guarded_remote_view,
           guard: guard,
@@ -15,7 +17,7 @@ defmodule PatternMetonyms.Ast do
           args: args,
         }
 
-      {:->, _, [[{:when, _, [[{:->, _, [[{{:., _, [{name, _, context}]}, _, args}], pat]}], guard]}], expr]}
+      ~m|((#{{name, _, context}}.(#{[spliced: args]}) -> #{pat}) when #{guard} -> #{expr})|w
         when is_atom(name) and is_atom(context) and is_list(args) ->
           %{
             type: :guarded_stored_fn_view,
@@ -27,7 +29,7 @@ defmodule PatternMetonyms.Ast do
             context: context,
           }
 
-      {:->, _, [[{:when, _, [[{:->, _, [[{:fn, _, body}], pat]}], guard]}], expr]}
+      ~m|((#{{:fn, _, body}} -> #{pat}) when #{guard} -> #{expr})|w
         when is_list(body) ->
           %{
             type: :guarded_raw_fn_view,
@@ -37,10 +39,9 @@ defmodule PatternMetonyms.Ast do
             body: body,
           }
 
-      {:->, _, [[{:when, _, [[{:->, _, [[{name, meta, args}], pat]}], guard]}], expr]}
+      ~m|((#{name}(#{[spliced: args]}) -> #{pat}) when #{guard} -> #{expr})|w
         when is_atom(name)
-        and is_list(meta)
-      and is_list(args) ->
+        and is_list(args) ->
         %{
           type: :guarded_local_view,
           guard: guard,
@@ -50,10 +51,10 @@ defmodule PatternMetonyms.Ast do
           args: args,
         }
 
-      {:->, _, [[{:when, _, [[{:->, _, [[{name, meta, context}], pat]}], guard]}], expr]}
+      ~m|((#{{name, meta, context}} -> #{pat}) when #{guard} -> #{expr})|w
         when is_atom(name)
         and is_list(meta)
-      and is_atom(context) ->
+        and is_atom(context) ->
         %{
           type: :guarded_local_view,
           guard: guard,
@@ -63,7 +64,7 @@ defmodule PatternMetonyms.Ast do
           args: [],
         }
 
-        {:->, _, [[{:when, _, [{{:., _, [module = {_, _, _}, function]}, _, args}, guard]}], expr]} ->
+      ~m|(#{{_, _, _} = module}.#{function}(#{[spliced: args]}) when #{guard} -> #{expr})|w ->
         %{
           type: :guarded_remote_syn,
           guard: guard,
@@ -73,9 +74,8 @@ defmodule PatternMetonyms.Ast do
           args: args,
         }
 
-        {:->, _, [[{:when, _, [{name, meta, args}, guard]}], expr]}
+      ~m|(#{name}(#{[spliced: args]}) when #{guard} -> #{expr})|w
         when is_atom(name)
-        and is_list(meta)
         and is_list(args) ->
         %{
           type: :guarded_local_syn,
@@ -85,7 +85,7 @@ defmodule PatternMetonyms.Ast do
           args: args,
         }
 
-        {:->, _, [[{:when, _, [{name, meta, context}, guard]}], expr]}
+      ~m|(#{{name, meta, context}} when #{guard} -> #{expr})|w
         when is_atom(name)
         and is_list(meta)
         and is_atom(context) ->
@@ -97,7 +97,7 @@ defmodule PatternMetonyms.Ast do
           context: context,
         }
 
-        {:->, _, [[{:when, _, [pat, guard]}], expr]} ->
+      ~m|(#{pat} when #{guard} -> #{expr})|w ->
         %{
           type: :guarded_clause,
           guard: guard,
@@ -105,7 +105,7 @@ defmodule PatternMetonyms.Ast do
           pat: pat,
         }
 
-        {:->, _, [[[{:->, _, [[{{:., _, [module = {_, _, _}, function]}, _, args}], pat]}]], expr]} ->
+      ~m|((#{{_, _, _} = module}.#{function}(#{[spliced: args]}) -> #{pat}) -> #{expr})|w ->
         %{
           type: :remote_view,
           guard: [],
@@ -116,7 +116,7 @@ defmodule PatternMetonyms.Ast do
           args: args,
         }
 
-        {:->, _, [[[{:->, _, [[{{:., _, [{name, _, context}]}, _, args}], pat]}]], expr]}
+      ~m|((#{{name, _, context}}.(#{[spliced: args]}) -> #{pat}) -> #{expr})|w
         when is_atom(name) and is_atom(context) and is_list(args) ->
           %{
             type: :stored_fn_view,
@@ -128,8 +128,8 @@ defmodule PatternMetonyms.Ast do
             args: args,
           }
 
-        {:->, _, [[[{:->, _, [[{:fn, _, body}], pat]}]], expr]}
-          when is_list(body) ->
+      ~m|((#{{:fn, _, body}} -> #{pat}) -> #{expr})|w
+        when is_list(body) ->
             %{
               type: :raw_fn_view,
               guard: [],
@@ -138,9 +138,8 @@ defmodule PatternMetonyms.Ast do
               body: body,
             }
 
-        {:->, _, [[[{:->, _, [[{name, meta, args}], pat]}]], expr]}
+      ~m"((#{name}(#{[spliced: args]}) -> #{pat}) -> #{expr})"w
         when is_atom(name)
-        and is_list(meta)
         and is_list(args) ->
         %{
           type: :local_view,
@@ -151,7 +150,7 @@ defmodule PatternMetonyms.Ast do
           args: args,
         }
 
-        {:->, _, [[[{:->, _, [[{name, meta, context}], pat]}]], expr]}
+      ~m"((#{{name, meta, context}} -> #{pat}) -> #{expr})"w
         when is_atom(name)
         and is_list(meta)
         and is_atom(context) ->
@@ -164,7 +163,7 @@ defmodule PatternMetonyms.Ast do
           args: [],
         }
 
-        {:->, _, [[{{:., _, [module = {_, _, _}, function]}, _, args}], expr]} ->
+      ~m|(#{{_, _, _} = module}.#{function}(#{[spliced: args]}) -> #{expr})|w ->
         %{
           type: :remote_syn,
           guard: [],
@@ -174,9 +173,8 @@ defmodule PatternMetonyms.Ast do
           args: args,
         }
 
-        {:->, _, [[{name, meta, args}], expr]}
+      ~m|(#{name}(#{[spliced: args]}) -> #{expr})|w
         when is_atom(name)
-        and is_list(meta)
         and is_list(args) ->
         %{
           type: :local_syn,
@@ -186,7 +184,7 @@ defmodule PatternMetonyms.Ast do
           args: args,
         }
 
-        {:->, _, [[{name, meta, context}], expr]}
+      ~m|(#{{name, meta, context}} -> #{expr})|w
         when is_atom(name)
         and is_list(meta)
         and is_atom(context) ->
@@ -198,14 +196,13 @@ defmodule PatternMetonyms.Ast do
           context: context,
         }
 
-        {:->, _, [[pat], expr]} ->
+      ~m|(#{pat} -> #{expr})|w ->
         %{
           type: :clause,
           guard: [],
           expr: expr,
           pat: pat,
         }
-
     end
   end
 

@@ -29,6 +29,7 @@ defmodule PatternMetonyms.MixProject do
 
   defp deps do
     [
+      {:circe, github: "Shakadak/circe.ex", branch: "pied"},
       {:ex_doc, "~> 0.23.0", only: :dev, runtime: false},
     ]
   end
