@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ### Changed
 
-- Implementation details, using new dependency
+- Implementation details, using new dependency: Circe
 
 ## [0.3.1] - 2021-03-11
 
