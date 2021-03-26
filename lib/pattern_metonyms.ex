@@ -200,6 +200,15 @@ defmodule PatternMetonyms do
   ```
   pattern heart(n) <- (less_than_3 -> {:ok, n})
   ```
+
+  Patterns can be documented:
+  ```
+  @doc \"\"\"
+  heart matches when the number is heartfelt <3
+  \"\"\"
+  pattern heart(n) <- (less_than_3 -> {:ok, n})
+  ```
+  You can then access the doc as usual: `h heart`, or `h Module.heart`.
   """
   defmacro pattern(ast) do
     PatternMetonyms.Internals.pattern_builder(ast)
