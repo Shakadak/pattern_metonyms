@@ -265,8 +265,11 @@ defmodule PatternMetonyms do
       6
   """
   defmacro view(data, do: clauses) when is_list(clauses) do
+    import Circe
+
     #_ = IO.puts("View clauses     -- #{Macro.to_string(clauses)}")
     #_ = IO.puts("View clauses ast -- #{inspect(clauses)}")
+
     parsed_clauses = Enum.map(clauses, &PatternMetonyms.Ast.parse_clause/1)
     expanded_clauses = Enum.map(parsed_clauses, fn data -> PatternMetonyms.Internals.expand_metonym(data, __CALLER__) end)
     #_ = IO.puts(Macro.to_string(Enum.map(expanded_clauses, &PatternMetonyms.Ast.to_ast/1)))
@@ -276,7 +279,7 @@ defmodule PatternMetonyms do
 
     rev_tail = case PatternMetonyms.Internals.view_folder(last, nil, var_data) do
       # presumably a catch all pattern
-      case_ast = {:case, [], [_, [do: [{:->, _, [[_lhs = {name, meta, con}], _rhs]}, _]]]} when is_atom(name) and is_list(meta) and is_atom(con) ->
+      case_ast = ~m/case #{_} do #{{name, meta, con}} -> #{_} ; #{_} -> #{_} end/ when is_atom(name) and is_list(meta) and is_atom(con) ->
 
         import Access
         case_ast = update_in(case_ast, [elem(2), at(1), at(0), elem(1)], &Enum.take(&1, 1))

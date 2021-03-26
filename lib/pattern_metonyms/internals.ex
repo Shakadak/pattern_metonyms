@@ -1,14 +1,11 @@
 defmodule PatternMetonyms.Internals do
   @moduledoc false
 
-  @doc false
-  defmacro pattern(ast) do
-    pattern_builder(ast)
-  end
+  import Circe
 
   @doc false
   # implicit bidirectional
-  def pattern_builder(_syn = {:=, _, [lhs, pat]}) do
+  def pattern_builder(_syn = ~m<#{lhs} = #{pat}>) do
     {name, meta, args} = lhs
     quote do
       defmacro unquote(lhs) do
@@ -58,7 +55,7 @@ defmodule PatternMetonyms.Internals do
   end
 
   # unidirectional / with view
-  def pattern_builder({:<-, _, [lhs, view = [{:->, _, [[_], pat]}]]}) do
+  def pattern_builder(~m<#{lhs} <- #{view = ~m/(#{_} -> #{pat})/}>) do
     {name, meta, args} = lhs
     unused_call = {name, meta, Enum.map(args, fn {_, m, c} -> {:_, m, c} end)}
     incorrect_call_message = "Pattern metonym #{Macro.to_string(lhs)} can only be used inside `PatternMetonyms.view/2` clauses."
@@ -100,7 +97,7 @@ defmodule PatternMetonyms.Internals do
   end
 
   # unidirectional
-  def pattern_builder({:<-, _, [lhs, pat]}) do
+  def pattern_builder(~m<#{lhs} <- #{pat}>) do
     {name, meta, args} = lhs
     quote do
       defmacro unquote(lhs) do
@@ -150,7 +147,7 @@ defmodule PatternMetonyms.Internals do
   end
 
   # explicit bidirectional / with view
-  def pattern_builder({:when, _, [{:<-, _, [lhs, view = [{:->, _, [[_], pat]}]]}, {:=, _, [lhs2, expr]}]}) do
+  def pattern_builder(~m<(#{lhs} <- #{view = ~m/(#{_} -> #{pat})/}) when #{lhs2} = #{expr}>) do
     {name, meta, args} = lhs
     {^name, _meta2, args2} = lhs2
 

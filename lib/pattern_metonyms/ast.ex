@@ -4,7 +4,6 @@ defmodule PatternMetonyms.Ast do
   def parse_clause(ast) do
     import Circe
 
-    #_ = IO.inspect(ast, label: "parse_clause(ast)", pretty: false)
     case ast do
       ~m|((#{{_, _, _} = module}.#{function}(#{[spliced: args]}) -> #{pat}) when #{guard} -> #{expr})|w ->
         %{
@@ -196,7 +195,7 @@ defmodule PatternMetonyms.Ast do
           context: context,
         }
 
-      ~m|(#{pat} -> #{expr})|w ->
+      ~m/(#{pat} -> #{expr})/w ->
         %{
           type: :clause,
           guard: [],
@@ -217,7 +216,8 @@ defmodule PatternMetonyms.Ast do
         function: function,
         args: args,
       } ->
-      {:->, [], [[{:when, [], [[{:->, [], [[{{:., [], [module, function]}, [], args}], pat]}], guard]}], expr]}
+      [x] = quote do ((unquote(module).unquote(function)(unquote_splicing(args)) -> unquote(pat)) when unquote(guard) -> unquote(expr)) end
+      x
 
         %{
           type: :guarded_stored_fn_view,
@@ -228,7 +228,8 @@ defmodule PatternMetonyms.Ast do
           args: args,
           context: context,
         } ->
-      {:->, [], [[{:when, [], [[{:->, [], [[{{:., [], [{name, [], context}]}, [], args}], pat]}], guard]}], expr]}
+      [x] = quote do ((unquote({name, [], context}).(unquote_splicing(args)) -> unquote(pat)) when unquote(guard) -> unquote(expr)) end
+      x
 
       %{
         type: :guarded_raw_fn_view,
@@ -237,7 +238,8 @@ defmodule PatternMetonyms.Ast do
         pat: pat,
         body: body,
       } ->
-      {:->, [], [[{:when, [], [[{:->, [], [[{:fn, [], body}], pat]}], guard]}], expr]}
+          [x] = quote do ((unquote({:fn, [], body}) -> unquote(pat)) when unquote(guard) -> unquote(expr)) end
+          x
 
         %{
           type: :guarded_local_view,
@@ -247,7 +249,8 @@ defmodule PatternMetonyms.Ast do
           function: name,
           args: args,
         } ->
-      {:->, [], [[{:when, [], [[{:->, [], [[{name, [], args}], pat]}], guard]}], expr]}
+        [x] = quote do ((unquote(name)(unquote_splicing(args)) -> unquote(pat)) when unquote(guard) -> unquote(expr)) end
+        x
 
         %{
           type: :guarded_remote_syn,
@@ -257,7 +260,8 @@ defmodule PatternMetonyms.Ast do
           function: function,
           args: args,
         } ->
-        {:->, [], [[{:when, [], [{{:., [], [module, function]}, [], args}, guard]}], expr]}
+        [x] = quote do (unquote(module).unquote(function)(unquote_splicing(args)) when unquote(guard) -> unquote(expr)) end
+        x
 
         %{
           type: :guarded_local_syn,
@@ -266,7 +270,8 @@ defmodule PatternMetonyms.Ast do
           function: name,
           args: args,
         } ->
-        {:->, [], [[{:when, [], [{name, [], args}, guard]}], expr]}
+        [x] = quote do (unquote(name)(unquote_splicing(args)) when unquote(guard) -> unquote(expr)) end
+        x
 
         %{
           type: :guarded_naked_syn,
@@ -275,7 +280,8 @@ defmodule PatternMetonyms.Ast do
           function: name,
           context: context,
         } ->
-        {:->, [], [[{:when, [], [{name, [], context}, guard]}], expr]}
+        [x] = quote do (unquote({name, [], context}) when unquote(guard) -> unquote(expr)) end
+        x
 
         %{
           type: :guarded_clause,
@@ -283,7 +289,8 @@ defmodule PatternMetonyms.Ast do
           expr: expr,
           pat: pat,
         } ->
-        {:->, [], [[{:when, [], [pat, guard]}], expr]}
+        [x] = quote do (unquote(pat) when unquote(guard) -> unquote(expr)) end
+        x
 
         %{
           type: :remote_view,
@@ -294,7 +301,8 @@ defmodule PatternMetonyms.Ast do
           function: function,
           args: args,
         } ->
-        {:->, [], [[[{:->, [], [[{{:., [], [module, function]}, [], args}], pat]}]], expr]}
+        [x] = quote do ((unquote(module).unquote(function)(unquote_splicing(args)) -> unquote(pat)) -> unquote(expr)) end
+        x
 
         %{
           type: :stored_fn_view,
@@ -305,7 +313,8 @@ defmodule PatternMetonyms.Ast do
           context: context,
           args: args,
         } ->
-        {:->, [], [[[{:->, [], [[{{:., [], [{name, [], context}]}, [], args}], pat]}]], expr]}
+        [x] = quote do ((unquote({name, [], context}).(unquote_splicing(args)) -> unquote(pat)) -> unquote(expr)) end
+        x
 
         %{
           type: :raw_fn_view,
@@ -314,7 +323,8 @@ defmodule PatternMetonyms.Ast do
           pat: pat,
           body: body,
         } ->
-        {:->, [], [[[{:->, [], [[{:fn, [], body}], pat]}]], expr]}
+        [x] = quote do ((unquote({:fn, [], body}) -> unquote(pat)) -> unquote(expr)) end
+        x
 
         %{
           type: :local_view,
@@ -324,7 +334,8 @@ defmodule PatternMetonyms.Ast do
           function: name,
           args: args,
         } ->
-        {:->, [], [[[{:->, [], [[{name, [], args}], pat]}]], expr]}
+        [x] = quote do ((unquote(name)(unquote_splicing(args)) -> unquote(pat)) -> unquote(expr)) end
+        x
 
         %{
           type: :remote_syn,
@@ -334,7 +345,8 @@ defmodule PatternMetonyms.Ast do
           function: function,
           args: args,
         } ->
-        {:->, [], [[{{:., [], [module, function]}, [], args}], expr]}
+        [x] = quote do (unquote(module).unquote(function)(unquote_splicing(args)) -> unquote(expr)) end
+        x
 
         %{
           type: :local_syn,
@@ -343,7 +355,8 @@ defmodule PatternMetonyms.Ast do
           function: name,
           args: args,
         } ->
-        {:->, [], [[{name, [], args}], expr]}
+        [x] = quote do (unquote(name)(unquote_splicing(args)) -> unquote(expr)) end
+        x
 
         %{
           type: :naked_syn,
@@ -352,7 +365,8 @@ defmodule PatternMetonyms.Ast do
           function: name,
           context: context,
         } ->
-        {:->, [], [[{name, [], context}], expr]}
+        [x] = quote do (unquote({name, [], context}) -> unquote(expr)) end
+        x
 
         %{
           type: :clause,
@@ -360,7 +374,8 @@ defmodule PatternMetonyms.Ast do
           expr: expr,
           pat: pat,
         } ->
-        {:->, [], [[pat], expr]}
+        [x] = quote do (unquote(pat) -> unquote(expr)) end
+        x
 
     end
   end
