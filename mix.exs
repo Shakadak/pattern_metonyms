@@ -1,6 +1,8 @@
 defmodule PatternMetonyms.MixProject do
   use Mix.Project
 
+  def version, do: "0.4.0"
+
   defp description do
     """
     Haskell's pattern synonyms for Elixir
@@ -10,13 +12,14 @@ defmodule PatternMetonyms.MixProject do
   def project do
     [
       app: :pattern_metonyms,
-      version: "0.3.1",
+      version: version(),
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
       source_url: git_repository(),
       deps: deps(),
+      docs: docs(),
       elixirc_options: [warnings_as_errors: true],
     ]
   end
@@ -29,8 +32,8 @@ defmodule PatternMetonyms.MixProject do
 
   defp deps do
     [
-      {:circe, github: "Shakadak/circe.ex", branch: "pied"},
-      {:ex_doc, "~> 0.23.0", only: :dev, runtime: false},
+      {:circe, "~> 0.1"},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
     ]
   end
 
@@ -40,7 +43,21 @@ defmodule PatternMetonyms.MixProject do
       links: %{
         "GitHub" => git_repository(),
         "Paper" => "https://www.microsoft.com/en-us/research/publication/pattern-synonyms/",
+        "Changelog" => "https://hexdocs.pm/pattern_metonyms/changelog.html",
       },
+    ]
+  end
+
+  def docs do
+    [
+      extras: [
+        "CHANGELOG.md": [title: "Changelog"],
+        "README.md": [title: "Overview"],
+      ],
+      api_reference: false,
+      main: "readme",
+      source_url: git_repository(),
+      source_ref: "v#{version()}",
     ]
   end
 
