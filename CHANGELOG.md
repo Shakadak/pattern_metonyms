@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
-## [0.4.0]
+## [0.4.0] - 2021-05-14
 
 ### Changed
 
