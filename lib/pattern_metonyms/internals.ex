@@ -379,8 +379,9 @@ defmodule PatternMetonyms.Internals do
     augmented_ast = PatternMetonyms.Ast.to_ast(augmented_data)
     case Macro.postwalk(augmented_ast, fn ast -> Macro.expand(ast, env) end) do
       ^augmented_ast ->
+        import Circe
         data = case PatternMetonyms.Ast.to_ast(data) do
-          {:->, _, [[pat], expr]} ->
+          ~m/(#{pat} -> #{expr})/w ->
             %{
               type: :clause,
               guard: [],
