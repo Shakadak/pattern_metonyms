@@ -5,27 +5,15 @@ defmodule PatternMetonyms.Internals do
 
   @doc false
   # implicit bidirectional
-  def pattern_builder(_syn = ~m<#{lhs} = #{pat}>) do
+  def pattern_builder(~m<#{lhs} = #{pat}>) do
     {name, meta, args} = lhs
     quote do
       defmacro unquote(lhs) do
         ast_args = unquote(Macro.escape(args))
         args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
+        args_relations = unquote(__MODULE__).relate_args(ast_args, args)
         ast_pat = unquote(Macro.escape(pat))
-
-        Macro.postwalk(ast_pat, fn x ->
-          case {unquote(__MODULE__).ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
+        unquote(__MODULE__).substitute_ast(ast_pat, args_relations)
         #|> case do x -> _ = IO.puts("#{unquote(name)} [implicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
       end
 
@@ -33,21 +21,9 @@ defmodule PatternMetonyms.Internals do
       defmacro unquote({:"$pattern_metonyms_viewing_#{name}", meta, args}) do
         ast_args = unquote(Macro.escape(args))
         args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
+        args_relations = unquote(__MODULE__).relate_args(ast_args, args)
         ast_pat = unquote(Macro.escape(pat))
-
-        Macro.postwalk(ast_pat, fn x ->
-          case {unquote(__MODULE__).ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
+        unquote(__MODULE__).substitute_ast(ast_pat, args_relations)
         #|> case do x -> _ = IO.puts("#{unquote(name)} [implicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
       end
     end
@@ -69,22 +45,9 @@ defmodule PatternMetonyms.Internals do
       defmacro unquote({:"$pattern_metonyms_viewing_#{name}", meta, args}) do
         ast_args = unquote(Macro.escape(args))
         args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
+        args_relations = unquote(__MODULE__).relate_args(ast_args, args)
         ast_pat = unquote(Macro.escape(pat))
-
-        ast_pat_updated = Macro.postwalk(ast_pat, fn x ->
-          case {unquote(__MODULE__).ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-
+        ast_pat_updated = unquote(__MODULE__).substitute_ast(ast_pat, args_relations)
         ast_view = unquote(Macro.escape(view))
 
         import Access
@@ -103,21 +66,9 @@ defmodule PatternMetonyms.Internals do
       defmacro unquote(lhs) do
         ast_args = unquote(Macro.escape(args))
         args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
+        args_relations = unquote(__MODULE__).relate_args(ast_args, args)
         ast_pat = unquote(Macro.escape(pat))
-
-        Macro.postwalk(ast_pat, fn x ->
-          case {unquote(__MODULE__).ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
+        unquote(__MODULE__).substitute_ast(ast_pat, args_relations)
         #|> case do x -> _ = IO.puts("#{unquote(name)} [unidirectional]:\n#{Macro.to_string(x)}") ; x end
       end
 
@@ -125,21 +76,9 @@ defmodule PatternMetonyms.Internals do
       defmacro unquote({:"$pattern_metonyms_viewing_#{name}", meta, args}) do
         ast_args = unquote(Macro.escape(args))
         args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
+        args_relations = unquote(__MODULE__).relate_args(ast_args, args)
         ast_pat = unquote(Macro.escape(pat))
-
-        Macro.postwalk(ast_pat, fn x ->
-          case {unquote(__MODULE__).ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
+        unquote(__MODULE__).substitute_ast(ast_pat, args_relations)
         #|> case do x -> _ = IO.puts("#{unquote(name)} [unidirectional]:\n#{Macro.to_string(x)}") ; x end
       end
     end
@@ -155,21 +94,10 @@ defmodule PatternMetonyms.Internals do
       defmacro unquote(lhs2) do
         ast_args = unquote(Macro.escape(args2))
         args = unquote(args2)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
+        args_relations = unquote(__MODULE__).relate_args(ast_args, args)
         ast_expr = unquote(Macro.escape(expr))
-
-        Macro.postwalk(ast_expr, fn x ->
-          case {unquote(__MODULE__).ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
+        ast_expr_updated = unquote(__MODULE__).substitute_ast(ast_expr, args_relations)
+        ast_expr_updated
         #|> case do x -> _ = IO.puts("#{unquote(name)} [explicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
       end
 
@@ -177,22 +105,9 @@ defmodule PatternMetonyms.Internals do
       defmacro unquote({:"$pattern_metonyms_viewing_#{name}", meta, args}) do
         ast_args = unquote(Macro.escape(args))
         args = unquote(args)
-        relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
-        args_relation = Map.new(Enum.zip(ast_args, args), relate)
-
+        args_relations = unquote(__MODULE__).relate_args(ast_args, args)
         ast_pat = unquote(Macro.escape(pat))
-
-        ast_pat_updated = Macro.postwalk(ast_pat, fn x ->
-          case {unquote(__MODULE__).ast_var?(x), x} do
-            {false, x} -> x
-            {true, {name, _, con}} ->
-              case Map.fetch(args_relation, {name, con}) do
-                :error -> x
-                {:ok, substitute} -> substitute
-              end
-          end
-        end)
-
+        ast_pat_updated = unquote(__MODULE__).substitute_ast(ast_pat, args_relations)
         ast_view = unquote(Macro.escape(view))
 
         import Access
@@ -202,6 +117,25 @@ defmodule PatternMetonyms.Internals do
       end
     end
     #|> case do x -> _ = IO.puts("pattern [explicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
+  end
+
+  def relate_args(ast_args, args) do
+    relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
+    args_relations = Map.new(Enum.zip(ast_args, args), relate)
+    args_relations
+  end
+
+  def substitute_ast(ast_pat, args_relations) do
+    Macro.postwalk(ast_pat, fn x ->
+      case {unquote(__MODULE__).ast_var?(x), x} do
+        {false, x} -> x
+        {true, {name, _, con}} ->
+          case Map.fetch(args_relations, {name, con}) do
+            :error -> x
+            {:ok, substitute} -> substitute
+          end
+      end
+    end)
   end
 
   def pattern_builder(ast) do
