@@ -119,12 +119,18 @@ defmodule PatternMetonyms.Internals do
     #|> case do x -> _ = IO.puts("pattern [explicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
   end
 
+  def pattern_builder(ast) do
+    raise("pattern not recognized: #{Macro.to_string(ast)}")
+  end
+
+  @doc false
   def relate_args(ast_args, args) do
     relate = fn {{name, _, con}, substitute} -> {{name, con}, substitute} end
     args_relations = Map.new(Enum.zip(ast_args, args), relate)
     args_relations
   end
 
+  @doc false
   def substitute_ast(ast_pat, args_relations) do
     Macro.postwalk(ast_pat, fn x ->
       case {unquote(__MODULE__).ast_var?(x), x} do
@@ -136,10 +142,6 @@ defmodule PatternMetonyms.Internals do
           end
       end
     end)
-  end
-
-  def pattern_builder(ast) do
-    raise("pattern not recognized: #{Macro.to_string(ast)}")
   end
 
   @doc false
