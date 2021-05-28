@@ -286,7 +286,7 @@ defmodule PatternMetonyms do
 
     var_data = Macro.var(:"$view_data_#{inspect(make_ref())}", __MODULE__)
 
-    rev_tail = case PatternMetonyms.Internals.view_folder(last, nil, var_data) do
+    rev_tail = case PatternMetonyms.Ast.view_folder(last, nil, var_data) do
       # presumably a catch all pattern
       case_ast = ~m/case #{_} do #{{name, meta, con}} -> #{_} ; #{_} -> #{_} end/ when is_atom(name) and is_list(meta) and is_atom(con) ->
 
@@ -303,7 +303,7 @@ defmodule PatternMetonyms do
         [fail_ast, last]
     end
 
-    view_ast = Enum.reduce(rev_tail ++ rev_clauses, fn x, acc -> PatternMetonyms.Internals.view_folder(x, acc, var_data) end)
+    view_ast = Enum.reduce(rev_tail ++ rev_clauses, fn x, acc -> PatternMetonyms.Ast.view_folder(x, acc, var_data) end)
 
     ast = quote do
       unquote(var_data) = unquote(data)

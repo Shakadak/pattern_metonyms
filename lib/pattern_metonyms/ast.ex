@@ -61,9 +61,29 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :guarded_remote_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        module: module,
+        function: function,
+        args: args,
+      } do
+        fn var_data, acc ->
+        quote do
+          case unquote(module).unquote(function)(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) when unquote(guard) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+        end
+      end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -94,9 +114,29 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :guarded_stored_fn_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        name: name,
+        args: args,
+        context: context,
+    } do
+      fn var_data, acc ->
+        quote do
+          case unquote({name, [], context}).(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) when unquote(guard) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -123,9 +163,27 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :guarded_raw_fn_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        body: body,
+    } do
+      fn var_data, acc ->
+        quote do
+          case (unquote({:fn, [], body})).(unquote(var_data)) do
+            unquote(pat) when unquote(guard) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -154,9 +212,28 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :guarded_local_view,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+        function: function,
+        args: args,
+    } do
+      fn var_data, acc ->
+      quote do
+        case unquote(function)(unquote(var_data), unquote_splicing(args)) do
+          unquote(pat) when unquote(guard) -> unquote(expr)
+          _ -> unquote(acc)
+        end
+      end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -185,9 +262,12 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = fn _ -> :no_match end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -215,9 +295,12 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = fn _ -> :no_match end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -244,9 +327,12 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = fn _ -> :no_match end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -273,9 +359,12 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = fn _ -> :no_match end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -299,9 +388,26 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :guarded_clause,
+        guard: guard,
+        expr: expr,
+        pat: pat,
+    } do
+      fn var_data, acc ->
+      quote do
+        case unquote(var_data) do
+          unquote(pat) when unquote(guard) -> unquote(expr)
+          _ -> unquote(acc)
+        end
+      end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -331,9 +437,29 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :remote_view,
+        guard: [],
+        expr: expr,
+        pat: pat,
+        module: module,
+        function: function,
+        args: args,
+    } do
+      fn var_data, acc ->
+        quote do
+          case unquote(module).unquote(function)(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -364,9 +490,29 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :stored_fn_view,
+        guard: [],
+        expr: expr,
+        pat: pat,
+        name: name,
+        context: context,
+        args: args,
+    } do
+      fn var_data, acc ->
+        quote do
+        case unquote({name, [], context}).(unquote(var_data), unquote_splicing(args)) do
+          unquote(pat) -> unquote(expr)
+          _ -> unquote(acc)
+        end
+      end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -393,9 +539,27 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :raw_fn_view,
+        guard: [],
+        expr: expr,
+        pat: pat,
+        body: body,
+    } do
+      fn var_data, acc ->
+        quote do
+          case (unquote({:fn, [], body})).(unquote(var_data)) do
+            unquote(pat) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -424,9 +588,12 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = fn _ -> :no_match end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -455,9 +622,28 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :local_view,
+        guard: [],
+        expr: expr,
+        pat: pat,
+        function: function,
+        args: args,
+    } do
+      fn var_data, acc ->
+        quote do
+          case unquote(function)(unquote(var_data), unquote_splicing(args)) do
+            unquote(pat) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -485,9 +671,12 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = fn _ -> :no_match end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -514,9 +703,12 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = fn _ -> :no_match end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -543,9 +735,12 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = fn _ -> :no_match end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -569,9 +764,26 @@ defmodule PatternMetonyms.Ast do
       x
     end
 
+    to_view = softmatch %{
+        type: :clause,
+        guard: [],
+        expr: expr,
+        pat: pat,
+    } do
+      fn (var_data, acc) ->
+        quote do
+          case unquote(var_data) do
+            unquote(pat) -> unquote(expr)
+            _ -> unquote(acc)
+          end
+        end
+      end
+    end
+
     %{
       parse: parse,
       to_ast: to_ast,
+      to_view: to_view,
     }
   end
 
@@ -595,5 +807,16 @@ defmodule PatternMetonyms.Ast do
     end)
 
     ast
+  end
+
+  def view_folder(data, acc, var_data) do
+    {:match, builder} = Enum.reduce_while(ordered_metas(), :no_match, fn meta, acc ->
+      case meta.to_view.(data) do
+        {:match, _data} = x -> {:halt, x}
+        :no_match -> {:cont, acc}
+      end
+    end)
+
+    builder.(var_data, acc)
   end
 end
