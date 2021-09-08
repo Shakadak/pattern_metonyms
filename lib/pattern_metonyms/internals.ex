@@ -5,8 +5,11 @@ defmodule PatternMetonyms.Internals do
 
   @doc false
   # implicit bidirectional
-  def pattern_builder(~m<#{lhs} = #{pat}>) do
-    {name, meta, args} = lhs
+  def pattern_builder(~m<#{lhs} = #{pat}>, _caller) do
+    {name, meta, args} = case lhs do
+      {name, meta, x} when not is_list(x) -> {name, meta, []}
+      t -> t
+    end
     quote do
       defmacro unquote(lhs) do
         ast_args = unquote(Macro.escape(args))
@@ -31,10 +34,13 @@ defmodule PatternMetonyms.Internals do
   end
 
   # unidirectional / with view
-  def pattern_builder(~m<#{lhs} <- #{view = ~m/(#{_} -> #{pat})/}>) do
-    {name, meta, args} = lhs
+  def pattern_builder(~m<#{lhs} <- #{view = ~m/(#{_} -> #{pat})/}>, caller) do
+    {name, meta, args} = case lhs do
+      {name, meta, x} when not is_list(x) -> {name, meta, []}
+      t -> t
+    end
     unused_call = {name, meta, Enum.map(args, fn {_, m, c} -> {:_, m, c} end)}
-    incorrect_call_message = "Pattern metonym #{Macro.to_string(lhs)} can only be used inside `PatternMetonyms.view/2` clauses."
+    incorrect_call_message = "Pattern metonym #{inspect(caller.module)}.#{Macro.to_string(lhs)}/#{length(args)} can only be used inside `PatternMetonyms.view/2` clauses."
 
     quote do
       defmacro unquote(unused_call) do
@@ -60,8 +66,11 @@ defmodule PatternMetonyms.Internals do
   end
 
   # unidirectional
-  def pattern_builder(~m<#{lhs} <- #{pat}>) do
-    {name, meta, args} = lhs
+  def pattern_builder(~m<#{lhs} <- #{pat}>, _caller) do
+    {name, meta, args} = case lhs do
+      {name, meta, x} when not is_list(x) -> {name, meta, []}
+      t -> t
+    end
     quote do
       defmacro unquote(lhs) do
         ast_args = unquote(Macro.escape(args))
@@ -86,9 +95,15 @@ defmodule PatternMetonyms.Internals do
   end
 
   # explicit bidirectional / with view
-  def pattern_builder(~m<(#{lhs} <- #{view = ~m/(#{_} -> #{pat})/}) when #{lhs2} = #{expr}>) do
-    {name, meta, args} = lhs
-    {^name, _meta2, args2} = lhs2
+  def pattern_builder(~m<(#{lhs} <- #{view = ~m/(#{_} -> #{pat})/}) when #{lhs2} = #{expr}>, _caller) do
+    {name, meta, args} = case lhs do
+      {name, meta, x} when not is_list(x) -> {name, meta, []}
+      t -> t
+    end
+    {^name, _meta2, args2} = case lhs2 do
+      {name, meta, x} when not is_list(x) -> {name, meta, []}
+      t -> t
+    end
 
     quote do
       defmacro unquote(lhs2) do
@@ -119,7 +134,7 @@ defmodule PatternMetonyms.Internals do
     #|> case do x -> _ = IO.puts("pattern [explicit bidirectional]:\n#{Macro.to_string(x)}") ; x end
   end
 
-  def pattern_builder(ast) do
+  def pattern_builder(ast, _caller) do
     raise("pattern not recognized: #{Macro.to_string(ast)}")
   end
 

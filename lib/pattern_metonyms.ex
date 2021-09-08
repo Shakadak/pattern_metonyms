@@ -211,7 +211,7 @@ defmodule PatternMetonyms do
   You can then access the doc as usual: `h heart`, or `h Module.heart`.
   """
   defmacro pattern(ast) do
-    PatternMetonyms.Internals.pattern_builder(ast)
+    PatternMetonyms.Internals.pattern_builder(ast, __CALLER__)
   end
 
   # view

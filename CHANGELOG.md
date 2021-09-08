@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
+### Changed
+
+- Implicitly replace patterns defined using no args with patterns defined using an empty list of args
+- Improved the localisation of the pattern mentioned in the error message for patterns that can only be used inside `view/2`
+
 ## [0.4.0] - 2021-05-14
 
 ### Changed
