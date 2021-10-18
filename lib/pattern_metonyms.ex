@@ -284,7 +284,7 @@ defmodule PatternMetonyms do
     #_ = IO.puts(Macro.to_string(Enum.map(expanded_clauses, &PatternMetonyms.Ast.to_ast/1)))
     [last | rev_clauses] = Enum.reverse(expanded_clauses)
 
-    var_data = Macro.var(:"$view_data_#{inspect(make_ref())}", __MODULE__)
+    var_data = Macro.var(:"$view_data_#{:erlang.unique_integer([:positive])}", __MODULE__)
 
     rev_tail = case PatternMetonyms.Ast.view_folder(last, nil, var_data) do
       # presumably a catch all pattern
