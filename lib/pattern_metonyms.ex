@@ -275,42 +275,85 @@ defmodule PatternMetonyms do
   """
   defmacro view(data, do: clauses) when is_list(clauses) do
     import Circe
+    asts =
+      clauses
+      |> Enum.map(fn
+        ~m/(#{pat} when #{guard} -> #{expr})/w -> {pat, guard, expr}
+        ~m/(#{pat} -> #{expr})/w -> {pat, {}, expr}
+      end)
+      |> Enum.map(fn {pat, guard, expr} ->
+        pat
+        |> PatternMetonyms.View.kind(__CALLER__)
+        |> case do
+          {pat, :keep} ->
+            {pat, guard, expr}
+          {pat, {:replace, next}} ->
+            {pat, guard, expr, next}
+        end
+      end)
 
-    #_ = IO.puts("View clauses     -- #{Macro.to_string(clauses)}")
-    #_ = IO.puts("View clauses ast -- #{inspect(clauses)}")
+      var = Macro.unique_var(:"$view_data", __MODULE__)
 
-    parsed_clauses = Enum.map(clauses, &PatternMetonyms.Ast.parse_clause/1)
-    expanded_clauses = Enum.map(parsed_clauses, fn data -> PatternMetonyms.Internals.expand_metonym(data, __CALLER__) end)
-    #_ = IO.puts(Macro.to_string(Enum.map(expanded_clauses, &PatternMetonyms.Ast.to_ast/1)))
-    [last | rev_clauses] = Enum.reverse(expanded_clauses)
+      start_ast = quote do unquote(var) = unquote(data) end
 
-    var_data = Macro.var(:"$view_data_#{:erlang.unique_integer([:positive])}", __MODULE__)
+      fallback_clause = quote generated: true do _ -> :no_match end |> hd()
 
-    rev_tail = case PatternMetonyms.Ast.view_folder(last, nil, var_data) do
-      # presumably a catch all pattern
-      case_ast = ~m/case #{_} do #{{name, meta, con}} -> #{_} ; #{_} -> #{_} end/ when is_atom(name) and is_list(meta) and is_atom(con) ->
+      end_ast = quote do raise(CaseClauseError, term: unquote(var)) end
 
-        import Access
-        case_ast = update_in(case_ast, [elem(2), at(1), at(0), elem(1)], &Enum.take(&1, 1))
+      ast = List.foldr(asts, end_ast, fn ast_t, acc ->
+        ast = case ast_t do
+          {pat, {}, expr} ->
+            hd(quote do unquote(pat) -> {:matched, unquote(expr)} end)
 
-        [case_ast]
+          {pat, guard, expr} ->
+            hd(quote do unquote(pat) when unquote(guard) -> {:matched, unquote(expr)} end)
 
-      _ ->
-        fail_ast = quote do
-          raise(CaseClauseError, term: unquote(var_data))
+          {pat, guard, expr, next} ->
+            match_ast = quote do {:matched, unquote(expr)} end
+
+            guard_ast = case guard do
+              {} -> []
+              guard -> [{
+                quote do
+                  try do unquote(guard) catch _, _ -> false end
+                end,
+                true
+              }]
+            end
+
+            next_expr =
+              next
+              |> Enum.reverse()
+              |> case do xs -> guard_ast ++ xs end
+              |> Enum.reduce(match_ast, fn
+                {transform_ast, pat}, next ->
+                  quote generated: true do
+                    case unquote(transform_ast) do
+                      unquote(pat) -> unquote(next)
+                      _ -> :no_match
+                    end
+                  end
+              end)
+
+            hd(quote do unquote(pat) -> unquote(next_expr) end)
         end
 
-        [fail_ast, last]
+        quote generated: true do
+          case unquote(var) do
+            unquote([ast, fallback_clause])
+          end
+          |> case do
+            {:matched, x} -> x
+            :no_match -> unquote(acc)
+          end
+        end
+        #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
+      end)
+
+    quote do
+      unquote(start_ast)
+      unquote(ast)
     end
-
-    view_ast = Enum.reduce(rev_tail ++ rev_clauses, fn x, acc -> PatternMetonyms.Ast.view_folder(x, acc, var_data) end)
-
-    ast = quote do
-      unquote(var_data) = unquote(data)
-      unquote(view_ast)
-    end
-
-    ast
-    #|> case do x -> _ = IO.puts("view:\n#{Macro.to_string(x)}") ; x end
+    #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
   end
 end

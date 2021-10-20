@@ -34,7 +34,19 @@ defmodule PatternMetonyms.Internals do
   end
 
   # unidirectional / with view
-  def pattern_builder(~m<#{lhs} <- #{view = ~m/(#{_} -> #{pat})/}>, caller) do
+  def pattern_builder(~m<#{lhs} <- #{view = ~m/(#{fun} -> #{pat})/}>, caller) do
+    case fun do
+      {_name, _meta, context} when is_atom(context)  ->
+        message =
+          """
+          Ambiguous function call `#{Macro.to_string(fun)}` in unidirectional pattern with view in #{caller.file}:#{caller.line}
+            Parentheses are required.
+          """
+        raise(message)
+
+      _ -> :ok
+    end
+
     {name, meta, args} = case lhs do
       {name, meta, x} when not is_list(x) -> {name, meta, []}
       t -> t
@@ -95,7 +107,19 @@ defmodule PatternMetonyms.Internals do
   end
 
   # explicit bidirectional / with view
-  def pattern_builder(~m<(#{lhs} <- #{view = ~m/(#{_} -> #{pat})/}) when #{lhs2} = #{expr}>, _caller) do
+  def pattern_builder(~m<(#{lhs} <- #{view = ~m/(#{fun} -> #{pat})/}) when #{lhs2} = #{expr}>, caller) do
+    case fun do
+      {_name, _meta, context} when is_atom(context)  ->
+        message =
+          """
+          Ambiguous function call `#{Macro.to_string(fun)}` in explicit bidirectional pattern with view in #{caller.file}:#{caller.line}
+            Parentheses are required.
+          """
+        raise(message)
+
+      _ -> :ok
+    end
+
     {name, meta, args} = case lhs do
       {name, meta, x} when not is_list(x) -> {name, meta, []}
       t -> t
