@@ -1,4 +1,4 @@
-defmodule PatternMetonyms.Internals do
+defmodule PatternMetonyms.Pattern do
   @moduledoc false
 
   import Circe
@@ -182,41 +182,6 @@ defmodule PatternMetonyms.Internals do
       end
     end)
   end
-
-  @doc false
-  def expand_metonym(%{type: type} = data, env)
-  when type in [
-    :guarded_remote_syn,
-    :guarded_local_syn,
-    :guarded_naked_syn,
-    :remote_syn,
-    :local_syn,
-    :naked_syn,
-  ]
-  do
-    transform = fn name -> :"$pattern_metonyms_viewing_#{name}" end
-    augmented_data = Map.update!(data, :function, transform)
-    augmented_ast = PatternMetonyms.Ast.to_ast(augmented_data)
-    case Macro.postwalk(augmented_ast, fn ast -> Macro.expand(ast, env) end) do
-      ^augmented_ast ->
-        import Circe
-        data = case PatternMetonyms.Ast.to_ast(data) do
-          ~m/(#{pat} -> #{expr})/w ->
-            %{
-              type: :clause,
-              guard: [],
-              expr: expr,
-              pat: pat,
-            }
-        end
-        data
-
-      new_ast ->
-        new_data = PatternMetonyms.Ast.parse_clause(new_ast)
-        expand_metonym(new_data, env)
-    end
-  end
-  def expand_metonym(data, _env), do: data
 
   # Utils
 
