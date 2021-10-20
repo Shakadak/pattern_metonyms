@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
+## [0.5.0] - 2021-10-20
+
 ### Changed
 
 - Implicitly replace patterns defined using no args with patterns defined using an empty list of args
 - Improved the localisation of the pattern mentioned in the error message for patterns that can only be used inside `view/2`
+- Breaking : require parentheses on raw views used with `view/2`, and in views used with `pattern/1`
+- Reworked `view` to handle nested pattern usage
 
 ## [0.4.0] - 2021-05-14
 
@@ -70,7 +74,8 @@ All notable changes to this project will be documented in this file. (Hopefully 
 Changelog format inspired by [keep-a-changelog]
 
 [keep-a-changelog]: https://github.com/olivierlacan/keep-a-changelog
-[unreleased]: https://github.com/shakadak/pattern_metonyms/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/shakadak/pattern_metonyms/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/shakadak/pattern_metonyms/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.2.0...v0.3.0

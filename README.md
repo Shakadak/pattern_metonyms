@@ -11,7 +11,7 @@ The package can be installed by adding `pattern_metonyms` to your list of depend
 ```elixir
 def deps do
   [
-    {:pattern_metonyms, "~> 0.4.0"}
+    {:pattern_metonyms, "~> 0.5.0"}
   ]
 end
 ```
