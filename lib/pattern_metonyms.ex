@@ -206,7 +206,7 @@ defmodule PatternMetonyms do
   @doc \"\"\"
   heart matches when the number is heartfelt <3
   \"\"\"
-  pattern heart(n) <- (less_than_3 -> {:ok, n})
+  pattern heart(n) <- (less_than_3() -> {:ok, n})
   ```
   You can then access the doc as usual: `h heart`, or `h Module.heart`.
   """
@@ -250,7 +250,7 @@ defmodule PatternMetonyms do
 
       iex> import PatternMetonyms
       iex> view :banana do
-      ...>   (Atom.to_string -> "ba" <> _) -> :ok
+      ...>   (Atom.to_string() -> "ba" <> _) -> :ok
       ...>   _ -> :ko
       ...> end
       :ok

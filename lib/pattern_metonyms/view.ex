@@ -1,4 +1,7 @@
 defmodule PatternMetonyms.View do
+  @moduledoc false
+
+  @doc false
   def kind(ast, macro_env) do
     import Circe
 
@@ -122,6 +125,7 @@ defmodule PatternMetonyms.View do
   end
 
 
+  @doc false
   def concat_act({:replace, prev}, {:replace, next}), do: {:replace, prev ++ next}
   def concat_act({:replace, next}, :keep), do: {:replace, next}
   def concat_act(:keep, x), do: x

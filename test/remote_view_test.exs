@@ -58,7 +58,7 @@ defmodule RemoteViewTest do
     defmodule TestRVPL3 do
       import PatternMetonyms
 
-      pattern rev_head(x) <- (Enum.reverse -> [x | _])
+      pattern rev_head(x) <- (Enum.reverse() -> [x | _])
     end
 
     defmodule TestRVPL3.Act do
@@ -93,7 +93,7 @@ defmodule RemoteViewTest do
     defmodule TestRVPL4 do
       import PatternMetonyms
 
-      pattern (tuple2(x, y) <- (Tuple.to_list -> [x, y | _])) when tuple2(x, y) = {x, y}
+      pattern (tuple2(x, y) <- (Tuple.to_list() -> [x, y | _])) when tuple2(x, y) = {x, y}
     end
 
     defmodule TestRVPL4.Act do
