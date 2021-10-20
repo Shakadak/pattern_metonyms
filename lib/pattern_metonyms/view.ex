@@ -13,6 +13,7 @@ defmodule PatternMetonyms.View do
         next_act = concat_act({:replace, next}, further_act)
 
         {var_data, next_act}
+
       ~m/(#{{_, _, _} = module}.#{function}(#{[spliced: args]}) -> #{pat})/ ->
         var_data = Macro.var(:"$view_data_#{:erlang.unique_integer([:positive])}", __MODULE__)
         {pat, further_act} = kind(pat, macro_env)
@@ -25,12 +26,11 @@ defmodule PatternMetonyms.View do
         {var_data, next_act}
 
       ~m/(#{view_fun = ~m/#{function}(#{[spliced: args]})/} -> #{pat})/ ->
-
-        _ = case args do
-          context when is_atom(context) ->
+        _ = case view_fun do
+          {_name, meta, context} when is_atom(context) ->
             message =
               """
-              Ambiguous function call `#{Macro.to_string(view_fun)}` in raw view in #{macro_env.file}:#{macro_env.line}
+              Ambiguous function call `#{Macro.to_string(view_fun)}` in raw view in #{macro_env.file}:#{Keyword.get(meta, :line, macro_env.line)}
                 Parentheses are required.
               """
             raise(message)

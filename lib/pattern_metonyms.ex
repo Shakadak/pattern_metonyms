@@ -91,7 +91,7 @@ defmodule PatternMetonyms do
       ...>
       ...>   pattern head(x) <- [x | _]
       ...>
-      ...>   pattern rev_head(x) <- (reverse -> head(x))
+      ...>   pattern rev_head(x) <- (reverse() -> head(x))
       ...>
       ...>   def reverse(xs), do: Enum.reverse(xs)
       ...>
@@ -140,7 +140,7 @@ defmodule PatternMetonyms do
       iex> defmodule DoctestTPZ do
       ...>   import PatternMetonyms
       ...>
-      ...>   pattern (snoc(x, xs) <- (unsnoc -> {x, xs}))
+      ...>   pattern (snoc(x, xs) <- (unsnoc() -> {x, xs}))
       ...>     when snoc(x, xs) = Enum.reverse([x | Enum.reverse(xs)])
       ...>
       ...>   defp unsnoc([]), do: :error
@@ -231,7 +231,7 @@ defmodule PatternMetonyms do
 
       iex> import PatternMetonyms
       iex> view self() do
-      ...>   (is_pid -> true) -> :ok
+      ...>   (is_pid() -> true) -> :ok
       ...>   _ -> :ko
       ...> end
       :ok
@@ -240,8 +240,8 @@ defmodule PatternMetonyms do
 
       iex> import PatternMetonyms
       iex> view -3 - :rand.uniform(2) do
-      ...>   (abs -> x) when x > 3 -> :ok
-      ...>   (abs -> x) when x < 3 -> :ko
+      ...>   (abs() -> x) when x > 3 -> :ok
+      ...>   (abs() -> x) when x < 3 -> :ko
       ...>   x -> x
       ...> end
       :ok

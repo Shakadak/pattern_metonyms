@@ -3,8 +3,7 @@ defmodule NestedViewTest do
 
   test "view two 2 pair" do
     defmodule TestVT2P1 do
-      import PatternMetonyms, except: [view: 2]
-      import PatternMetonyms.View
+      import PatternMetonyms
 
       pattern two <- 2
       pattern two_b <- (Function.identity() -> 2)
@@ -22,8 +21,7 @@ defmodule NestedViewTest do
 
   test "view two 2 pair (with id)" do
     defmodule TestVT2P2 do
-      import PatternMetonyms, except: [view: 2]
-      import PatternMetonyms.View
+      import PatternMetonyms
 
       pattern two <- (Function.identity -> 2)
 

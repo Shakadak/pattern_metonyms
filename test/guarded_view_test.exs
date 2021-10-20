@@ -8,7 +8,7 @@ defmodule GuardedViewTest do
       def uncons([]), do: :Nothing
       def uncons([x | xs]), do: {:Just, {x, xs}}
 
-      pattern justHead(x) <- (uncons -> {:Just, {x, _}})
+      pattern justHead(x) <- (uncons() -> {:Just, {x, _}})
 
       def bigHead(xs) do
         view xs do
@@ -32,7 +32,7 @@ defmodule GuardedViewTest do
 
       def bigHead(xs) do
         view xs do
-          (uncons -> {:Just, {x, _}}) when x > 1 -> {:Just, x}
+          (uncons() -> {:Just, {x, _}}) when x > 1 -> {:Just, x}
           _ -> :Nothing
         end
       end
@@ -52,7 +52,7 @@ defmodule GuardedViewTest do
 
       def bigHead(xs) do
         view xs do
-          (uncons -> {:Just, {x, _}} when x > 1) -> {:Just, x}
+          (uncons() -> {:Just, {x, _}} when x > 1) -> {:Just, x}
           _ -> :Nothing
         end
       end
@@ -66,8 +66,8 @@ defmodule GuardedViewTest do
   test "guards with view pattern" do
     import PatternMetonyms
     result = view 2 - :rand.uniform(2) do
-      (abs -> x) when x > 3 -> :ok
-      (abs -> x) when x < 3 -> :ko
+      (abs() -> x) when x > 3 -> :ok
+      (abs() -> x) when x < 3 -> :ko
       x -> x
     end
     assert result == :ko

@@ -7,7 +7,7 @@ defmodule RemoteGuardedViewTest do
 
       def reverse(xs), do: Enum.reverse(xs)
 
-      pattern rev_head(x) <- (reverse -> [x | _])
+      pattern rev_head(x) <- (reverse() -> [x | _])
     end
 
     defmodule TestRVPL2.Act do
