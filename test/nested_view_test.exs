@@ -5,7 +5,7 @@ defmodule NestedViewTest do
     defmodule TestVT2P1 do
       import PatternMetonyms
 
-      pattern two <- 2
+      pattern(two <- 2)
 
       def foo do
         view {2, 2} do
@@ -22,7 +22,7 @@ defmodule NestedViewTest do
     defmodule TestVT2P2 do
       import PatternMetonyms
 
-      pattern two <- (Function.identity -> 2)
+      pattern(two <- (Function.identity() -> 2))
 
       def foo do
         view {2, 2} do
@@ -39,12 +39,13 @@ defmodule NestedViewTest do
     defmodule TestVJT1 do
       import PatternMetonyms
 
-      pattern two <- (Function.identity -> 2)
+      pattern(two <- (Function.identity() -> 2))
 
-      pattern just(x) <- (Function.identity -> {:Just, x})
+      pattern(just(x) <- (Function.identity() -> {:Just, x}))
 
       def foo do
         x = {:Just, 2}
+
         view {x} do
           {just(two())} -> :ok
           _ -> :ko

@@ -2,6 +2,12 @@ defmodule PatternMetonyms.View do
   @moduledoc false
 
   @doc false
+  def inspect_macro(x) do
+    _ = IO.puts(Macro.to_string(x))
+    x
+  end
+
+  @doc false
   def kind(ast, macro_env) do
     import Circe
 
@@ -53,7 +59,6 @@ defmodule PatternMetonyms.View do
 
       ~m/#{name}(#{[spliced: args]})/ when is_atom(name) and is_list(args) -> # local syn ?
         augmented_ast = quote do unquote(:"$pattern_metonyms_viewing_#{name}")(unquote_splicing(args)) end
-        #_ = IO.puts(Macro.to_string(augmented_ast))
         augmented_ast
         |> Macro.expand(macro_env)
         |> case do

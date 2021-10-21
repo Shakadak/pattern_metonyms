@@ -278,17 +278,21 @@ defmodule PatternMetonyms do
     asts =
       clauses
       |> Enum.map(fn
-        ~m/(#{pat} when #{guard} -> #{expr})/w -> {pat, guard, expr}
-        ~m/(#{pat} -> #{expr})/w -> {pat, {}, expr}
+        ~m/(#{pat} when #{guard} -> #{expr})/w ->
+          guard_ast = quote do
+            try do unquote(guard) catch _, _ -> false end
+          end
+          {pat, [{guard_ast, true}], expr}
+        ~m/(#{pat} -> #{expr})/w -> {pat, [], expr}
       end)
       |> Enum.map(fn {pat, guard, expr} ->
         pat
         |> PatternMetonyms.View.kind(__CALLER__)
         |> case do
           {pat, :keep} ->
-            {pat, guard, expr}
+            {pat, expr, guard}
           {pat, {:replace, next}} ->
-            {pat, guard, expr, next}
+            {pat, expr, next ++ guard}
         end
       end)
 
@@ -302,34 +306,18 @@ defmodule PatternMetonyms do
 
       ast = List.foldr(asts, end_ast, fn ast_t, acc ->
         ast = case ast_t do
-          {pat, {}, expr} ->
-            hd(quote do unquote(pat) -> {:matched, unquote(expr)} end)
-
-          {pat, guard, expr} ->
-            hd(quote do unquote(pat) when unquote(guard) -> {:matched, unquote(expr)} end)
-
-          {pat, guard, expr, next} ->
+          {pat, expr, next} ->
             match_ast = quote do {:matched, unquote(expr)} end
-
-            guard_ast = case guard do
-              {} -> []
-              guard -> [{
-                quote do
-                  try do unquote(guard) catch _, _ -> false end
-                end,
-                true
-              }]
-            end
 
             next_expr =
               next
               |> Enum.reverse()
-              |> case do xs -> guard_ast ++ xs end
               |> Enum.reduce(match_ast, fn
                 {transform_ast, pat}, next ->
+                  transform_ast = quote do (try do {:transformed, unquote(transform_ast)} catch _, _ -> :failed end) end
                   quote generated: true do
                     case unquote(transform_ast) do
-                      unquote(pat) -> unquote(next)
+                      {:transformed, unquote(pat)} -> unquote(next)
                       _ -> :no_match
                     end
                   end

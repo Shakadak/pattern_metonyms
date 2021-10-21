@@ -5,7 +5,7 @@ defmodule SimpleViewTest do
     defmodule TestVM2 do
       import PatternMetonyms
 
-      pattern just2(a, b) = {:Just, {a, b}}
+      pattern(just2(a, b) = {:Just, {a, b}})
 
       def f(x) do
         view x do
@@ -17,7 +17,7 @@ defmodule SimpleViewTest do
       def foo, do: f(just2(3, 2))
     end
 
-    assert TestVM2.foo == 5
+    assert TestVM2.foo() == 5
   end
 
   test "view safe head" do
@@ -46,7 +46,7 @@ defmodule SimpleViewTest do
       def uncons([]), do: :Nothing
       def uncons([x | xs]), do: {:Just, {x, xs}}
 
-      pattern justHead(x) <- (uncons() -> {:Just, {x, _}})
+      pattern(justHead(x) <- (uncons() -> {:Just, {x, _}}))
 
       def safeHead(xs) do
         view xs do
@@ -80,8 +80,10 @@ defmodule SimpleViewTest do
         new_polar(r, t)
       end
 
-      pattern (polar(r, a) <- (cartesian_to_polar() -> {r, a}))
+      pattern(
+        (polar(r, a) <- (cartesian_to_polar() -> {r, a}))
         when polar(r, a) = polar_to_cartesian(r, a)
+      )
 
       def foo(point) do
         view point do
@@ -92,7 +94,10 @@ defmodule SimpleViewTest do
 
     # results from : https://keisan.casio.com/exec/system/1223526375
     # angle unit radian, 18digit
-    assert TestEPC1.foo(TestEPC1.new_cartesian(3, 3)) == %{radius: 4.24264068711928515, theta: 0.78539816339744831}
+    assert TestEPC1.foo(TestEPC1.new_cartesian(3, 3)) == %{
+             radius: 4.24264068711928515,
+             theta: 0.78539816339744831
+           }
   end
 
   test "explicit pattern string x integer" do
@@ -102,7 +107,7 @@ defmodule SimpleViewTest do
       def string_to_integer(s), do: String.to_integer(s)
       def integer_to_string(i), do: Integer.to_string(i)
 
-      pattern (sti(x) <- (string_to_integer() -> x)) when sti(x) = integer_to_string(x)
+      pattern((sti(x) <- (string_to_integer() -> x)) when sti(x) = integer_to_string(x))
 
       def foo(s) do
         view s do
@@ -122,7 +127,7 @@ defmodule SimpleViewTest do
       def string_to_integer(s), do: String.to_integer(s)
       def integer_to_string(i), do: Integer.to_string(i)
 
-      pattern (sti(x) <- (String.to_integer() -> x)) when sti(x) = Integer.to_string(x)
+      pattern((sti(x) <- (String.to_integer() -> x)) when sti(x) = Integer.to_string(x))
 
       def foo(s) do
         view s do
@@ -133,5 +138,29 @@ defmodule SimpleViewTest do
 
     assert TestEPSI2.foo("65") == "65"
     assert TestEPSI2.foo("-45") == "5"
+  end
+
+  test "inverted `in` guard" do
+    import PatternMetonyms
+
+    result =
+      view [1, 2, 3] do
+        xs when 2 in xs -> :ok
+        _ -> :ko
+      end
+
+    assert result == :ok
+  end
+
+  test "last clause match" do
+    import PatternMetonyms
+
+    result =
+      view 2 do
+        1 -> :ko
+        2 -> :ok
+      end
+
+    assert result == :ok
   end
 end
