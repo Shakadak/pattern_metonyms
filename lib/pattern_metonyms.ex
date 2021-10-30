@@ -274,74 +274,15 @@ defmodule PatternMetonyms do
       6
   """
   defmacro view(data, do: clauses) when is_list(clauses) do
-    import Circe
-    asts =
-      clauses
-      |> Enum.map(fn
-        ~m/(#{pat} when #{guard} -> #{expr})/w ->
-          guard_ast = quote do
-            try do unquote(guard) catch _, _ -> false end
-          end
-          {pat, [{guard_ast, true}], expr}
-        ~m/(#{pat} -> #{expr})/w -> {pat, [], expr}
-      end)
-      |> Enum.map(fn {pat, guard, expr} ->
-        pat
-        |> PatternMetonyms.View.kind(__CALLER__)
-        |> case do
-          {pat, :keep} ->
-            {pat, expr, guard}
-          {pat, {:replace, next}} ->
-            {pat, expr, next ++ guard}
-        end
-      end)
+    PatternMetonyms.View.builder(data, clauses, __CALLER__)
+    #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
+  end
 
-      var = Macro.unique_var(:"$view_data", __MODULE__)
-
-      start_ast = quote do unquote(var) = unquote(data) end
-
-      fallback_clause = quote generated: true do _ -> :no_match end |> hd()
-
-      end_ast = quote do raise(CaseClauseError, term: unquote(var)) end
-
-      ast = List.foldr(asts, end_ast, fn ast_t, acc ->
-        ast = case ast_t do
-          {pat, expr, next} ->
-            match_ast = quote do {:matched, unquote(expr)} end
-
-            next_expr =
-              next
-              |> Enum.reverse()
-              |> Enum.reduce(match_ast, fn
-                {transform_ast, pat}, next ->
-                  transform_ast = quote do (try do {:transformed, unquote(transform_ast)} catch _, _ -> :failed end) end
-                  quote generated: true do
-                    case unquote(transform_ast) do
-                      {:transformed, unquote(pat)} -> unquote(next)
-                      _ -> :no_match
-                    end
-                  end
-              end)
-
-            hd(quote do unquote(pat) -> unquote(next_expr) end)
-        end
-
-        quote generated: true do
-          case unquote(var) do
-            unquote([ast, fallback_clause])
-          end
-          |> case do
-            {:matched, x} -> x
-            :no_match -> unquote(acc)
-          end
-        end
-        #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
-      end)
-
-    quote do
-      unquote(start_ast)
-      unquote(ast)
-    end
+  @doc """
+  View with anonymous functions
+  """
+  defmacro fnv(do: clauses) when is_list(clauses) do
+    PatternMetonyms.Fnv.builder(clauses, __CALLER__)
     #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
   end
 end
