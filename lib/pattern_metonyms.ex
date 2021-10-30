@@ -285,4 +285,41 @@ defmodule PatternMetonyms do
     PatternMetonyms.Fnv.builder(clauses, __CALLER__)
     #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
   end
+
+  @doc false
+  defmacro __using__(_opts) do
+    quote do
+      @before_compile {unquote(__MODULE__), :before_compile_defv}
+
+      import unquote(__MODULE__), only: [defv: 2]
+    end
+  end
+
+  @doc """
+  view with named functions
+  """
+  defmacro defv(call, [{:do, body} | rest]) do
+    call = case call do
+      {name, meta, nil} -> {name, meta, []}
+      call -> call
+    end
+    x = PatternMetonyms.Defv.streamline(call, body, rest)
+    attribute = :defv_accumulator
+    _ = Module.register_attribute(__CALLER__.module, attribute, accumulate: true)
+    _ = Module.put_attribute(__CALLER__.module, attribute, x)
+  end
+
+  defmacro before_compile_defv(_env) do
+    defv_accumulator = Module.get_attribute(__CALLER__.module, :defv_accumulator, [])
+    _ = Module.delete_attribute(__CALLER__.module, :defv_accumulator)
+
+    Enum.reverse(defv_accumulator)
+    |> Enum.chunk_by(fn {name, arity, _clause} -> {name, arity} end)
+    |> Enum.map(fn xs ->
+      {name, _, _} = hd(xs)
+      clauses = Enum.map(xs, fn {_, _, clause} -> clause end)
+      PatternMetonyms.Defv.builder(name, clauses, __CALLER__)
+    end)
+    #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
+  end
 end

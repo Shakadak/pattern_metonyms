@@ -1,4 +1,4 @@
-defmodule PatternMetonyms.Fnv do
+defmodule PatternMetonyms.Defv do
   @moduledoc false
 
   @doc false
@@ -38,9 +38,9 @@ defmodule PatternMetonyms.Fnv do
   end
 
   @doc false
-  def builder(clauses, caller) do
+  def builder(name, clauses, caller) do
     case analyse_args(clauses) do
-      {:error, message} -> raise("fnv improperly defined at #{caller.file}:#{caller.line} with reason: #{message}")
+      {:error, message} -> raise("defv improperly defined at #{caller.file}:#{caller.line} with reason: #{message}")
       {:ok, n} ->
         args = Macro.generate_unique_arguments(n, __MODULE__)
         import Circe
@@ -50,14 +50,13 @@ defmodule PatternMetonyms.Fnv do
             xs = Enum.reverse(rxs)
             quote do {unquote_splicing(xs)} when unquote(guard) -> unquote(expr) end
 
-          ~m/(#{[spliced: xs]} -> #{expr})/w ->
-            quote do {unquote_splicing(xs)} -> unquote(expr) end
+          ~m/(#{[spliced: xs]} -> #{expr})/w -> quote do {unquote_splicing(xs)} -> unquote(expr) end
         end)
         |> Enum.map(&hd/1)
         #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
 
         quote do
-          fn unquote_splicing(args) ->
+          def unquote(name)(unquote_splicing(args)) do
             PatternMetonyms.view {unquote_splicing(args)} do
               unquote(clauses)
             end
@@ -67,5 +66,31 @@ defmodule PatternMetonyms.Fnv do
         #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
 
     end
+  end
+
+  def streamline(call, body, rest) do
+    import Circe
+
+    #_ = IO.inspect(call, label: "streamline call")
+    #    |> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
+
+    body = case rest do
+      [] -> body
+      other ->
+        quote do
+          try unquote([body | other])
+        end
+    end
+
+    case call do
+      ~m/#{name}(#{[spliced: args]}) when #{guards}/ ->
+        clause = hd(quote do unquote_splicing(args) when unquote(guards) -> unquote(body) end)
+        {name, Enum.count(args), clause}
+      ~m/#{name}(#{[spliced: args]})/ ->
+        clause = hd(quote do unquote_splicing(args) -> unquote(body) end)
+        {name, Enum.count(args), clause}
+    end
+    #|> IO.inspect(label: "streamline result")
+    #|> case do {_, _, ast} = x -> _ = IO.puts(Macro.to_string(ast)) ; x end
   end
 end
