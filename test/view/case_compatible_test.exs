@@ -1,5 +1,5 @@
 defmodule CaseCompatibleTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "maybe pair" do
     defmodule TestM2 do

@@ -1,5 +1,5 @@
 defmodule RemoteViewPatternTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "view pattern with remote call, and argument" do
     import PatternMetonyms

@@ -1,5 +1,5 @@
 defmodule AnonymousFunctionViewTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "view with anonymous function" do
     import PatternMetonyms

@@ -1,5 +1,5 @@
 defmodule RemoteGuardedViewTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "guarded view with remote pattern using a view" do
     defmodule TestRVPL2 do

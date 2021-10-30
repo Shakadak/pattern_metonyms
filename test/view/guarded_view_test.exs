@@ -1,5 +1,5 @@
 defmodule GuardedViewTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "guards with pattern" do
     defmodule TestGPL1 do

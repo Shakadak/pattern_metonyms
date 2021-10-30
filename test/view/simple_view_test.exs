@@ -1,5 +1,5 @@
 defmodule SimpleViewTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "view maybe pair" do
     defmodule TestVM2 do

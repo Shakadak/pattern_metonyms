@@ -1,5 +1,5 @@
 defmodule RemoteViewTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "view with remote pattern" do
     defmodule TestRPL2 do

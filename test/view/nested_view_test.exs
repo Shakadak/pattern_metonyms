@@ -1,5 +1,5 @@
 defmodule NestedViewTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "view two 2 pair" do
     defmodule TestVT2P1 do

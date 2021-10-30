@@ -291,7 +291,7 @@ defmodule PatternMetonyms do
     quote do
       @before_compile {unquote(__MODULE__), :before_compile_defv}
 
-      import unquote(__MODULE__), only: [defv: 2]
+      import unquote(__MODULE__)
     end
   end
 

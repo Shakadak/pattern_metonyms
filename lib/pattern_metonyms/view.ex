@@ -13,6 +13,7 @@ defmodule PatternMetonyms.View do
 
     case ast do
       ~m/(#{{:fn, _, body}} -> #{pat})/ ->
+        #_ = IO.puts("+++ Matched fn -> pat +++")
         var_data = Macro.var(:"$view_data_#{:erlang.unique_integer([:positive])}", __MODULE__)
         {pat, further_act} = kind(pat, macro_env)
         next = [{
@@ -24,6 +25,7 @@ defmodule PatternMetonyms.View do
         {var_data, next_act}
 
       ~m/(#{{_, _, _} = module}.#{function}(#{[spliced: args]}) -> #{pat})/ ->
+        #_ = IO.puts("+++ Matched module.function(args) -> pat +++")
         var_data = Macro.var(:"$view_data_#{:erlang.unique_integer([:positive])}", __MODULE__)
         {pat, further_act} = kind(pat, macro_env)
         next = [{
@@ -35,6 +37,7 @@ defmodule PatternMetonyms.View do
         {var_data, next_act}
 
       ~m/(#{view_fun = ~m/#{function}(#{[spliced: args]})/} -> #{pat})/ ->
+        #_ = IO.puts("+++ Matched function(args) -> pat +++")
         _ = case view_fun do
           {_name, meta, context} when is_atom(context) ->
             message =
@@ -58,6 +61,7 @@ defmodule PatternMetonyms.View do
         {var_data, next_act}
 
       ~m/#{name}(#{[spliced: args]})/ when is_atom(name) and is_list(args) -> # local syn ?
+        #_ = IO.puts("+++ Matched function(args) +++")
         augmented_ast = quote do unquote(:"$pattern_metonyms_viewing_#{name}")(unquote_splicing(args)) end
         augmented_ast
         |> Macro.expand(macro_env)
@@ -81,6 +85,7 @@ defmodule PatternMetonyms.View do
         end
 
       ~m/#{{_, _, _} = module}.#{function}(#{[spliced: args]})/ -> # remote syn ?
+        #_ = IO.puts("+++ Matched module.function(args) +++")
         augmented_ast = quote do unquote(module).unquote(:"$pattern_metonyms_viewing_#{function}")(unquote_splicing(args)) end
         augmented_ast
         |> Macro.expand(macro_env)
@@ -105,6 +110,7 @@ defmodule PatternMetonyms.View do
         end
 
       xs when is_list(xs) ->
+        #_ = IO.puts("+++ Matched list +++")
         {ast, acts} =
           Enum.map(xs, fn x -> kind(x, macro_env) end)
           |> Enum.unzip()
@@ -116,6 +122,7 @@ defmodule PatternMetonyms.View do
         {ast, act}
 
       {left, right} ->
+        #_ = IO.puts("+++ Matched tuple +++")
         {l_ast, l_act} = kind(left, macro_env)
         {r_ast, r_act} = kind(right, macro_env)
         ast = {l_ast, r_ast}
@@ -124,6 +131,7 @@ defmodule PatternMetonyms.View do
         {ast, act}
 
       other ->
+        #_ = IO.puts("+++ Matched something else +++")
         #_ = IO.puts("other = #{inspect(other)}")
         {other, :keep}
     end
