@@ -19,7 +19,7 @@ defmodule Defv.SimpleViewTest do
 
     pattern(justHead(x) <- (uncons() -> {:Just, {x, _}}))
 
-    defv safeHead2((uncons() -> {:Just, {x, _}})), do: {:Just, x}
+    defv safeHead2(justHead(x)), do: {:Just, x}
     defv safeHead2(_), do: :Nothing
 
     def new_cartesian(x, y), do: %{x: x, y: y}
