@@ -280,6 +280,12 @@ defmodule PatternMetonyms do
 
   @doc """
   View with anonymous functions
+
+  ```elixir
+  import PatternMetonyms
+
+  id = fnv do (Function.identity() -> x) -> x end
+  ```
   """
   defmacro fnv(do: clauses) when is_list(clauses) do
     PatternMetonyms.Fnv.builder(clauses, __CALLER__)
@@ -297,6 +303,12 @@ defmodule PatternMetonyms do
 
   @doc """
   view with named functions
+
+  ```elixir
+  use PatternMetonyms
+
+  defv id((Function.identity() -> x)), do: x
+  ```
   """
   defmacro defv(call, [{:do, body} | rest]) do
     call = case call do
@@ -309,6 +321,7 @@ defmodule PatternMetonyms do
     _ = Module.put_attribute(__CALLER__.module, attribute, x)
   end
 
+  @doc false
   defmacro before_compile_defv(_env) do
     defv_accumulator = Module.get_attribute(__CALLER__.module, :defv_accumulator, [])
     _ = Module.delete_attribute(__CALLER__.module, :defv_accumulator)
