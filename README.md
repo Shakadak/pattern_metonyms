@@ -4,6 +4,10 @@ Attempt at implementing Pattern Synonyms from [https://www.microsoft.com/en-us/r
 
 Consider this as a personal project project until 1.0.0, you may open issues, but pull requests will be closed without consideration.
 
+## Warning
+
+This library hides a lot of code, please keep yourself aware that by using it, you are trading a lot of runtime efficiency for a lot of (unmeasured) expressivness power.
+
 ## Installation
 
 The package can be installed by adding `pattern_metonyms` to your list of dependencies in `mix.exs`:
@@ -11,7 +15,7 @@ The package can be installed by adding `pattern_metonyms` to your list of depend
 ```elixir
 def deps do
   [
-    {:pattern_metonyms, "~> 0.5.0"}
+    {:pattern_metonyms, "~> 0.6.0"}
   ]
 end
 ```
@@ -141,7 +145,7 @@ Say `:queue.to_list/1` doesn't exist, neither `:queue.fold/3`, how would you go 
   ```elixir
   defmodule Queue do
     # [...]
-  
+
     def to_list(queue) do
       case :queue.out(queue) do
         {:empty, _} -> []
@@ -154,7 +158,7 @@ Say `:queue.to_list/1` doesn't exist, neither `:queue.fold/3`, how would you go 
   ```elixir
   defmodule Queue do
     # [...]
-  
+
     defv to_list(empty()), do: []
     defv to_list(pop(x, queue)), do: [x | to_list(queue)]
   end
@@ -163,7 +167,3 @@ Say `:queue.to_list/1` doesn't exist, neither `:queue.fold/3`, how would you go 
 I hope you are now starting to get an idea about how to play with this lib.
 
 More to come when the inspiration does.
-
-# Warning
-
-This library hides a lot of code, please keep yourself aware that by using it, you are trading a lot of runtime efficiency for a lot of expressivness power. (unmeasured)
