@@ -323,8 +323,9 @@ defmodule PatternMetonyms do
 
   @doc false
   defmacro before_compile_defv(_env) do
-    defv_accumulator = Module.get_attribute(__CALLER__.module, :defv_accumulator, [])
-    _ = Module.delete_attribute(__CALLER__.module, :defv_accumulator)
+    attribute = :defv_accumulator
+    defv_accumulator = Module.get_attribute(__CALLER__.module, attribute, [])
+    _ = Module.delete_attribute(__CALLER__.module, attribute)
 
     Enum.reverse(defv_accumulator)
     |> Enum.chunk_by(fn {name, arity, _clause} -> {name, arity} end)

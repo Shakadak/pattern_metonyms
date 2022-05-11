@@ -1,60 +1,23 @@
 defmodule PatternMetonyms.Defv do
   @moduledoc false
 
-  @doc false
-  def count_args(clause) do
-    import Circe
-
-    case clause do
-      ~m/(#{{:when, _meta, args}} -> #{_a})/w ->
-        [_guard | xs] = Enum.reverse(args)
-        Enum.count(xs)
-
-      ~m/(#{[spliced: xs]} -> #{_a})/w -> Enum.count(xs)
-    end
-  end
-
-  @doc false
-  def analyse_args(clauses) do
-    Enum.reduce(clauses, {}, fn
-      x, {} -> {:matching, count_args(x)}
-      x, {:matching, n} ->
-        n2 = count_args(x)
-        case {n, n2} do
-          {n, n} -> {:matching, n}
-          {n, n2} -> {:different, [n2, n]}
-        end
-      x, {:different, ns} ->
-        n = count_args(x)
-        case n in ns do
-          true -> {:different, ns}
-          false -> {:different, [n | ns]}
-        end
-    end)
-    |> case do
-      {:matching, n} -> {:ok, n}
-      {:different, _ns} -> {:error, "Found variable amount of argument in clauses."}
-    end
-  end
+  alias PatternMetonyms.Builder
 
   @doc false
   def builder(name, clauses, caller) do
-    case analyse_args(clauses) do
+    case Builder.analyse_args(clauses) do
       {:error, message} -> raise("defv improperly defined at #{caller.file}:#{caller.line} with reason: #{message}")
       {:ok, n} ->
         args = Macro.generate_unique_arguments(n, __MODULE__)
-        import Circe
-        clauses = Enum.map(clauses, fn
-          ~m/(#{{:when, _meta, args}} -> #{expr})/w ->
-            [guard | rxs] = Enum.reverse(args)
-            xs = Enum.reverse(rxs)
-            quote do {unquote_splicing(xs)} when unquote(guard) -> unquote(expr) end
-
-          ~m/(#{[spliced: xs]} -> #{expr})/w -> quote do {unquote_splicing(xs)} -> unquote(expr) end
-        end)
-        |> Enum.map(&hd/1)
+        clauses = Enum.map(clauses, &Builder.wrap_pattern/1)
         #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
 
+        # def name(arg1, argN) do
+        #   PatternMetonyms.view {arg1, argN} do
+        #     clause1 -> expr1
+        #     clause 2 -> expr2
+        #   end
+        # end
         quote do
           def unquote(name)(unquote_splicing(args)) do
             PatternMetonyms.view {unquote_splicing(args)} do
@@ -84,10 +47,12 @@ defmodule PatternMetonyms.Defv do
 
     case call do
       ~m/#{name}(#{[spliced: args]}) when #{guards}/ ->
-        clause = hd(quote do unquote_splicing(args) when unquote(guards) -> unquote(body) end)
+        pat = quote do unquote_splicing(args) end
+        clause = Builder.generate_clause(pat, guards, body)
         {name, Enum.count(args), clause}
       ~m/#{name}(#{[spliced: args]})/ ->
-        clause = hd(quote do unquote_splicing(args) -> unquote(body) end)
+        pat = quote do unquote_splicing(args) end
+        clause = Builder.generate_clause(pat, body)
         {name, Enum.count(args), clause}
     end
     #|> IO.inspect(label: "streamline result")
