@@ -30,7 +30,7 @@ defmodule PatternMetonyms.Builder do
         {_guard, xs} = pop_guard(args)
         Enum.count(xs)
 
-      ~m/(#{[spliced: xs]} -> #{_a})/w ->
+      ~m/(#{...xs} -> #{_a})/w ->
         Enum.count(xs)
     end
   end
@@ -67,7 +67,7 @@ defmodule PatternMetonyms.Builder do
         pat = quote(do: {unquote_splicing(xs)})
         generate_clause(pat, guard, expr)
 
-      ~m/(#{[spliced: xs]} -> #{expr})/w ->
+      ~m/(#{...xs} -> #{expr})/w ->
         pat = quote(do: {unquote_splicing(xs)})
         generate_clause(pat, expr)
     end

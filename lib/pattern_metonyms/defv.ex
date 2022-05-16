@@ -46,11 +46,11 @@ defmodule PatternMetonyms.Defv do
     end
 
     case call do
-      ~m/#{name}(#{[spliced: args]}) when #{guards}/ ->
+      ~m/#{name}(#{...args}) when #{guards}/ ->
         pat = quote do unquote_splicing(args) end
         clause = Builder.generate_clause(pat, guards, body)
         {name, Enum.count(args), clause}
-      ~m/#{name}(#{[spliced: args]})/ ->
+      ~m/#{name}(#{...args})/ ->
         pat = quote do unquote_splicing(args) end
         clause = Builder.generate_clause(pat, body)
         {name, Enum.count(args), clause}

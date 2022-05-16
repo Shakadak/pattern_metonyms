@@ -55,4 +55,23 @@ defmodule NestedViewTest do
 
     assert TestVJT1.foo() == :ok
   end
+
+  test "view simple equality pattern" do
+    defmodule TestSEP1 do
+      import PatternMetonyms
+
+      pattern id(x) = x
+
+      def foo do
+        data = (fn _ -> {1, 2} end).(2 - :rand.uniform(2))
+        view data do
+          {y, id(y)} -> y
+        end
+      end
+    end
+
+    assert_raise CaseClauseError, fn ->
+      TestSEP1.foo()
+    end
+  end
 end

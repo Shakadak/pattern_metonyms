@@ -1,7 +1,7 @@
 defmodule PatternMetonyms.MixProject do
   use Mix.Project
 
-  def version, do: "0.6.0"
+  def version, do: "0.6.1"
 
   defp description do
     """
@@ -32,7 +32,7 @@ defmodule PatternMetonyms.MixProject do
 
   defp deps do
     [
-      {:circe, "~> 0.1"},
+      {:circe, "~> 0.2"},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
     ]
   end

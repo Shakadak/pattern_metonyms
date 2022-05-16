@@ -44,4 +44,24 @@ defmodule RemoteViewPatternTest do
       end
     end
   end
+
+  test "simpler equality pattern" do
+    assert_raise CaseClauseError, fn ->
+      import PatternMetonyms
+
+      view {1, 2} do
+        {x, (Function.identity() -> x)} -> x
+      end
+    end
+  end
+
+  test "simpler equality pattern: swapped" do
+    assert_raise CaseClauseError, fn ->
+      import PatternMetonyms
+
+      view {1, 2} do
+        {(Function.identity() -> x), x} -> x
+      end
+    end
+  end
 end

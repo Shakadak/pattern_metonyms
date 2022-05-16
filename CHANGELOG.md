@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
+### Added
+
+- Now handling equality patterns
+
 ## [0.6.0] - 2021-11-03
 
 ### Added
