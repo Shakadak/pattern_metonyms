@@ -15,7 +15,7 @@ The package can be installed by adding `pattern_metonyms` to your list of depend
 ```elixir
 def deps do
   [
-    {:pattern_metonyms, "~> 0.6.0"}
+    {:pattern_metonyms, "~> 0.6.1"}
   ]
 end
 ```
@@ -104,7 +104,6 @@ Using this library, you can use new control flow constructs, the more interestin
 Note:
   Unfortunatly it's currently too hard for me to define an equivalent to the match operator named `=/2`. (Mainly because I haven't made the effort.)
   Because of that, it's difficult to do something as nice as raw code for non conditional execution.
-  (And I just realised that equality pattern won't work with `view/2` in certain cases. `{x, x} = {1, 2}`, so I'll have to get around to it before 1.0.0)
 
 Using view patterns, you can directly pattern match with the functions of the module `:queue`:
 - for control flow:
