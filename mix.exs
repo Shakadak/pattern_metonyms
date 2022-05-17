@@ -51,8 +51,8 @@ defmodule PatternMetonyms.MixProject do
   def docs do
     [
       extras: [
-        "CHANGELOG.md": [title: "Changelog"],
         "README.md": [title: "Overview"],
+        "CHANGELOG.md": [title: "Changelog"],
       ],
       api_reference: false,
       main: "readme",
