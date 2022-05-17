@@ -47,12 +47,14 @@ defmodule PatternMetonyms.Defv do
 
     case call do
       ~m/#{name}(#{...args}) when #{guards}/ ->
-        pat = quote do unquote_splicing(args) end
-        clause = Builder.generate_clause(pat, guards, body)
+        clause = Builder.unwrap_clause(quote do
+          unquote_splicing(args) when unquote(guards) -> unquote(body)
+        end)
         {name, Enum.count(args), clause}
       ~m/#{name}(#{...args})/ ->
-        pat = quote do unquote_splicing(args) end
-        clause = Builder.generate_clause(pat, body)
+        clause = Builder.unwrap_clause(quote do
+          unquote_splicing(args) -> unquote(body)
+        end)
         {name, Enum.count(args), clause}
     end
     #|> IO.inspect(label: "streamline result")

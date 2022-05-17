@@ -4,17 +4,19 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
+## [0.6.1] - 2022-05-17
+
 ### Added
 
-- Now handling equality patterns
+- Now handling equality patterns.
 
 ## [0.6.0] - 2021-11-03
 
 ### Added
 
-- `view/2` can now use any function in guards, as long as they return `true`
-- Added `defv/2` to define named functions capable of the same things as `view/2`
-- Added `fnv/1` do defined anonymous functions capable of the same things as `view/2`
+- `view/2` can now use any function in guards, as long as they return `true`.
+- Added `defv/2` to define named functions capable of the same things as `view/2`.
+- Added `fnv/1` do defined anonymous functions capable of the same things as `view/2`.
 
 ## [0.5.0] - 2021-10-20
 
@@ -87,6 +89,7 @@ Changelog format inspired by [keep-a-changelog]
 
 [keep-a-changelog]: https://github.com/olivierlacan/keep-a-changelog
 [unreleased]: https://github.com/shakadak/pattern_metonyms/compare/v0.6.0...HEAD
+[0.6.1]: https://github.com/shakadak/pattern_metonyms/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.3.1...v0.4.0

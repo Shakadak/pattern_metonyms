@@ -21,4 +21,45 @@ defmodule Fnv.RemoteViewPatternTest do
     end
     assert baz.(%{banana: :split}) == :ko
   end
+
+  test "simple equality pattern" do
+    assert_raise CaseClauseError, fn ->
+      import PatternMetonyms
+      f = fnv do
+        {(Function.identity() -> x), (Function.identity -> x)} -> x
+      end
+
+      f.({1, 2})
+    end
+  end
+
+  test "simpler equality pattern" do
+    assert_raise CaseClauseError, fn ->
+      import PatternMetonyms
+      f = fnv do
+        {(Function.identity() -> x), x} -> x
+      end
+
+      f.({1, 2})
+    end
+  end
+
+  test "simpler equality pattern: swapped" do
+    assert_raise CaseClauseError, fn ->
+      import PatternMetonyms
+      f = fnv do
+        {x, (Function.identity() -> x)} -> x
+      end
+
+      f.({1, 2})
+    end
+  end
+
+  test "3 params basic function" do
+    import PatternMetonyms
+    f = fnv do
+      a, b, c -> a + b + c + 1
+    end
+    assert f.(1, 2, 3) == 7
+  end
 end

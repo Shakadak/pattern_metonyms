@@ -65,11 +65,11 @@ defmodule PatternMetonyms.Builder do
       ~m/(#{{:when, _meta, args}} -> #{expr})/w ->
         {guard, xs} = pop_guard(args)
         pat = quote(do: {unquote_splicing(xs)})
-        generate_clause(pat, guard, expr)
+        unwrap_clause(quote do unquote(pat) when unquote(guard) -> unquote(expr) end)
 
       ~m/(#{...xs} -> #{expr})/w ->
         pat = quote(do: {unquote_splicing(xs)})
-        generate_clause(pat, expr)
+        unwrap_clause(quote do unquote(pat) -> unquote(expr) end)
     end
   end
 end
