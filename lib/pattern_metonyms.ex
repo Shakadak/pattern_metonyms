@@ -336,4 +336,24 @@ defmodule PatternMetonyms do
     end)
     #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
   end
+
+  @doc """
+  `=/2` equivalent to view, named form.
+
+      iex> import PatternMetonyms
+      ...> pat = fn {:Just, x} -> x end
+      ...> fit((pat.() -> n), {:Just, 3})
+      ...> n + 1
+      4
+
+  Underscore prefixed variables are ignored, they are therefore unusable outside
+  `fit/2`'s first argument.
+
+  Because of the lack of operator with the same associativity and precedence as `=/2`,
+  no operator form of `fit/2` is planned. It would otherwise result in unintuitive behaviors.
+  """
+  defmacro fit(lhs, rhs) do
+    PatternMetonyms.Fit.builder(lhs, rhs)
+    #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
+  end
 end
