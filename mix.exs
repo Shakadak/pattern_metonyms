@@ -1,11 +1,11 @@
 defmodule PatternMetonyms.MixProject do
   use Mix.Project
 
-  def version, do: "0.6.1"
+  def version, do: "0.7.0"
 
   defp description do
     """
-    Enhanced pattern matching for Elixir inspired by Haskell's pattern synonyms 
+    Enhanced pattern matching for Elixir inspired by Haskell's pattern synonyms.
     """
   end
 

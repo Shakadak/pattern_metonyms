@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file. (Hopefully 
 
 ## [Unreleased]
 
+## [0.7.0] - 2022-06-20
+
 ### Added
 
 - Added `fit/2` as an equivalent to `=/2`.
+- Added `fit/1` to convert `=/2` to `fit/2` within the do block.
 
 ## [0.6.1] - 2022-05-17
 
@@ -92,7 +95,8 @@ All notable changes to this project will be documented in this file. (Hopefully 
 Changelog format inspired by [keep-a-changelog].
 
 [keep-a-changelog]: https://github.com/olivierlacan/keep-a-changelog
-[unreleased]: https://github.com/shakadak/pattern_metonyms/compare/v0.6.1...HEAD
+[unreleased]: https://github.com/shakadak/pattern_metonyms/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/shakadak/pattern_metonyms/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/shakadak/pattern_metonyms/compare/v0.4.0...v0.5.0
