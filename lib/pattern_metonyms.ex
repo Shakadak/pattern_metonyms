@@ -351,9 +351,38 @@ defmodule PatternMetonyms do
 
   Because of the lack of operator with the same associativity and precedence as `=/2`,
   no operator form of `fit/2` is planned. It would otherwise result in unintuitive behaviors.
+
+  Left nesting of `fit/2` will result in a compilation error.
   """
   defmacro fit(lhs, rhs) do
     PatternMetonyms.Fit.builder(lhs, rhs)
+    #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
+  end
+
+  @doc """
+  Replaces _all_ occurences of `=/2` in the do block by `fit/2`
+
+      iex> import PatternMetonyms
+      ...> fit do
+      ...>   (Kernel.+(1) -> x) = 1
+      ...>   (Kernel.-(1) -> y) = 41
+      ...> end
+      ...> x + y
+      42
+
+      iex> import PatternMetonyms
+      ...> fit(do: (Kernel.+(1) -> x) = (Kernel.-(1) -> y) = 21)
+      ...> x + y
+      42
+  """
+  defmacro fit(do: body) do
+    import Circe
+
+    Macro.prewalk(body, fn
+      ~m/#{pat} when #{guard} = #{expr}/ -> quote do unquote(__MODULE__).fit(unquote(pat) when unquote(guard), unquote(expr)) end
+      ~m/#{pat} = #{expr}/ -> quote do unquote(__MODULE__).fit(unquote(pat), unquote(expr)) end
+      other -> other
+    end)
     #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
   end
 end
