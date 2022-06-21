@@ -1,7 +1,7 @@
 defmodule PatternMetonyms.MixProject do
   use Mix.Project
 
-  def version, do: "0.7.0"
+  def version, do: "0.8.0"
 
   defp description do
     """

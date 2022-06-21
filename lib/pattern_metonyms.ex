@@ -210,8 +210,8 @@ defmodule PatternMetonyms do
   ```
   You can then access the doc as usual: `h heart`, or `h Module.heart`.
   """
-  defmacro pattern(ast) do
-    PatternMetonyms.Pattern.pattern_builder(ast, __CALLER__)
+  defmacro pattern(metonym) do
+    PatternMetonyms.Pattern.pattern_builder(metonym, __CALLER__)
   end
 
   # view
@@ -273,8 +273,8 @@ defmodule PatternMetonyms do
       ...> end
       6
   """
-  defmacro view(data, do: clauses) when is_list(clauses) do
-    PatternMetonyms.View.builder(data, clauses, __CALLER__)
+  defmacro view(expr, _clauses = [do: clauses]) when is_list(clauses) do
+    PatternMetonyms.View.builder(expr, clauses, __CALLER__)
     #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
   end
 
@@ -287,7 +287,7 @@ defmodule PatternMetonyms do
   id = fnv do (Function.identity() -> x) -> x end
   ```
   """
-  defmacro fnv(do: clauses) when is_list(clauses) do
+  defmacro fnv(_clauses = [do: clauses]) when is_list(clauses) do
     PatternMetonyms.Fnv.builder(clauses, __CALLER__)
     #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
   end
@@ -302,7 +302,7 @@ defmodule PatternMetonyms do
   end
 
   @doc """
-  view with named functions
+  View with named functions
 
   ```elixir
   use PatternMetonyms
@@ -310,7 +310,7 @@ defmodule PatternMetonyms do
   defv id((Function.identity() -> x)), do: x
   ```
   """
-  defmacro defv(call, [{:do, body} | rest]) do
+  defmacro defv(call, _expr = [{:do, body} | rest]) do
     call = case call do
       {name, meta, nil} -> {name, meta, []}
       call -> call
@@ -354,8 +354,8 @@ defmodule PatternMetonyms do
 
   Left nesting of `fit/2` will result in a compilation error.
   """
-  defmacro fit(lhs, rhs) do
-    PatternMetonyms.Fit.builder(lhs, rhs)
+  defmacro fit(pat, expr) do
+    PatternMetonyms.Fit.builder(pat, expr)
     #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
   end
 
@@ -375,7 +375,7 @@ defmodule PatternMetonyms do
       ...> x + y
       42
   """
-  defmacro fit(do: body) do
+  defmacro fit(_block = [do: body]) do
     import Circe
 
     Macro.prewalk(body, fn
@@ -384,5 +384,60 @@ defmodule PatternMetonyms do
       other -> other
     end)
     #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
+  end
+
+  @doc """
+  `view/2`'s equivalent to `match?/2`
+
+      iex> import PatternMetonyms
+      ...> matchv?((Function.identity() -> 1), 1)
+      true
+
+      iex> import PatternMetonyms
+      ...> matchv?((Function.identity() -> {1, _}), {1, 2})
+      true
+
+      iex> import PatternMetonyms
+      ...> map = %{a: 1, b: 2}
+      ...> matchv?((Map.take([:a, :b, :c]) -> %{a: _}), map)
+      true
+
+      iex> import PatternMetonyms
+      ...> map = %{a: 1, b: 2}
+      ...> matchv?((Map.take([:b, :c]) -> %{a: _}), map)
+      false
+
+      iex> import PatternMetonyms
+      ...> a = 1
+      ...> matchv?(^a, 1)
+      true
+
+      iex> import PatternMetonyms
+      ...> a = 1
+      ...> matchv?((Function.identity() -> ^a), 1)
+      true
+
+      iex> import PatternMetonyms
+      ...> list = [a: 1, b: 2, a: 3]
+      ...> Enum.filter(list, &matchv?((Function.identity() -> {:a, _}), &1))
+      [a: 1, a: 3]
+
+      iex> import PatternMetonyms
+      ...> list = [a: 1, b: 2, a: 3]
+      ...> Enum.filter(list, &matchv?((Function.identity() -> {:a, x}) when x < 2, &1))
+      [a: 1]
+
+      iex> import PatternMetonyms
+      ...> matchv?(_x, 1)
+      ...> binding()
+      []
+  """
+  defmacro matchv?(pat, expr) do
+    quote do
+      PatternMetonyms.view unquote(expr) do
+        unquote(pat) -> true
+        _ -> false
+      end
+    end
   end
 end
