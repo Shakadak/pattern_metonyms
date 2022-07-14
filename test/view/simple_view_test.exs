@@ -124,9 +124,6 @@ defmodule SimpleViewTest do
     defmodule TestEPSI2 do
       import PatternMetonyms
 
-      def string_to_integer(s), do: String.to_integer(s)
-      def integer_to_string(i), do: Integer.to_string(i)
-
       pattern((sti(x) <- (String.to_integer() -> x)) when sti(x) = Integer.to_string(x))
 
       def foo(s) do

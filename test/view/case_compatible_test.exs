@@ -98,4 +98,20 @@ defmodule CaseCompatibleTest do
 
     assert result == 1
   end
+
+  test "explicit pattern string x integer remotely" do
+    assert_raise CompileError, fn ->
+      defmodule TestEPSI2 do
+        import PatternMetonyms
+
+        pattern((sti(x) <- (String.to_integer() -> x)) when sti(x) = Integer.to_string(x))
+
+        def foo(s) do
+          case s do
+            sti(i) -> sti(max(5, i))
+          end
+        end
+      end
+    end
+  end
 end

@@ -73,10 +73,10 @@ defmodule PatternMetonyms.View do
           {_name, meta, context} when is_atom(context) ->
             message =
               """
-              Ambiguous function call `#{Macro.to_string(view_fun)}` in raw view in #{macro_env.file}:#{Keyword.get(meta, :line, macro_env.line)}
+              Ambiguous function call `#{Macro.to_string(view_fun)}` in raw view.
                 Parentheses are required.
               """
-            raise(message)
+            raise(CompileError, file: macro_env.file, line: Keyword.get(meta, :line, macro_env.line), description: message)
 
           _ -> :ok
         end

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. (Hopefully I won't forget much.)
 
+## Unreleased
+
+### Changed
+
+- Error message improvements when patterns are used improperly.
+
 ## [0.8.0] - 2022-06-21
 
 ### Added
