@@ -25,3 +25,6 @@ pattern_metonyms-*.tar
 
 # Temporary files for e.g. tests
 /tmp
+
+# asdf-vm configuration file
+.tool-versions
