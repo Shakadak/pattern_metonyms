@@ -4,7 +4,7 @@ defmodule PatternMetonyms.View do
   alias PatternMetonyms.Builder
 
   @doc false
-  def inspect_macro(x) do
+  def io_inspect_macro(x) do
     _ = IO.puts(Macro.to_string(x))
     x
   end
@@ -37,12 +37,11 @@ defmodule PatternMetonyms.View do
   def kind_walker(ast, {prev, existing_vars, macro_env}) do
     import Circe
 
-    #_ = IO.inspect(ast, label: ">>> ast")
-    #_ = IO.puts(">>> code: #{Macro.to_string(ast)}")
-
     case ast do
+      {_, [{:"$pattern_metonyms_visited", true} | _], _} = ast ->
+        {ast, {prev, existing_vars, macro_env}}
+
       ~m/(#{{:fn, _, body}} -> #{pat})/ ->
-        #_ = IO.puts("+++ Matched fn -> pat +++")
         var_data = gen_var()
 
         next_data =
@@ -55,7 +54,6 @@ defmodule PatternMetonyms.View do
         {var_data, {prev ++ next, existing_vars, macro_env}}
 
       ~m/(#{{_, _, _} = module}.#{function}(#{...args}) -> #{pat})/ ->
-        #_ = IO.puts("+++ Matched module.function(args) -> pat +++")
         var_data = gen_var()
 
         next_data =
@@ -68,18 +66,7 @@ defmodule PatternMetonyms.View do
         {var_data, {prev ++ next, existing_vars, macro_env}}
 
       ~m/(#{view_fun = ~m/#{function}(#{...args})/} -> #{pat})/ ->
-        #_ = IO.puts("+++ Matched function(args) -> pat +++")
-        _ = case view_fun do
-          {_name, meta, context} when is_atom(context) ->
-            message =
-              """
-              Ambiguous function call `#{Macro.to_string(view_fun)}` in raw view.
-                Parentheses are required.
-              """
-            raise(CompileError, file: macro_env.file, line: Keyword.get(meta, :line, macro_env.line), description: message)
-
-          _ -> :ok
-        end
+        _ = Builder.check_view_pattern_ambiguity(view_fun, macro_env, "raw")
 
         var_data = gen_var()
 
@@ -92,8 +79,7 @@ defmodule PatternMetonyms.View do
 
         {var_data, {prev ++ next, existing_vars, macro_env}}
 
-      ~m/#{name}(#{...args})/ when is_atom(name) and is_list(args) -> # local syn ?
-        #_ = IO.puts("+++ Matched function(args) +++")
+      ~m/#{name}(#{...args})/ when is_atom(name) and is_list(args) ->
         augmented_ast = quote do unquote(:"$pattern_metonyms_viewing_#{name}")(unquote_splicing(args)) end
         augmented_ast
         |> Macro.expand(macro_env)
@@ -113,12 +99,10 @@ defmodule PatternMetonyms.View do
             kind_walker(other, {prev, existing_vars, macro_env})
         end
 
-      ~m/#{{_, _, _} = module}.#{function}(#{...args})/ -> # remote syn ?
-        #_ = IO.puts("+++ Matched module.function(args) +++")
+      ~m/#{{_, _, _} = module}.#{function}(#{...args})/ ->
         augmented_ast = quote do unquote(module).unquote(:"$pattern_metonyms_viewing_#{function}")(unquote_splicing(args)) end
         augmented_ast
         |> Macro.expand(macro_env)
-        #|> IO.inspect(label: "macro expansion test remote syn")
         |> case do
           ^augmented_ast ->
             #_ = IO.puts("no change")
@@ -135,11 +119,7 @@ defmodule PatternMetonyms.View do
             kind_walker(other, {prev, existing_vars, macro_env})
         end
 
-      {_, [{:"$pattern_metonyms_visited", true} | _], _} = ast ->
-        {ast, {prev, existing_vars, macro_env}}
-
       {name, _, context} = ast when is_atom(context) ->
-        #_ = IO.puts("+++ Matched var +++")
         current_level = level(existing_vars)
         {ast, existing_vars} = case fetch_var(existing_vars, name) do
           {:ok, ^current_level} ->
@@ -192,6 +172,7 @@ defmodule PatternMetonyms.View do
   end
 
   @doc false
+  # Detect the nested patterns.
   def unfold(data, pat, macro_env) do
     init_acc = {[{data, pat}], new_scope(), macro_env}
     {nexts, _acc} = do_unfold(init_acc)
@@ -219,11 +200,13 @@ defmodule PatternMetonyms.View do
   def builder(data, clauses, caller) do
     import Circe
 
+    # Equivalent to bind_quoted.
     var = Macro.unique_var(:"$view_data", __MODULE__)
     start_ast = quote do unquote(var) = unquote(data) end
 
     asts =
       clauses
+      # Transform guards into an extra nested pattern.
       |> Enum.map(fn
         ~m/(#{pat} when #{guard} -> #{expr})/w ->
           guard_ast = quote do

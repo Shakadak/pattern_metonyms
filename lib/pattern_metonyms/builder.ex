@@ -72,4 +72,24 @@ defmodule PatternMetonyms.Builder do
         unwrap_clause(quote do unquote(pat) -> unquote(expr) end)
     end
   end
+
+  @doc false
+  # Convert 0-arity without parens into 0-arity with parens to streamline the data.
+  def normalize_parens({name, meta, x}) when not is_list(x), do: {name, meta, []}
+  def normalize_parens(t), do: t
+
+  @doc false
+  def check_view_pattern_ambiguity(fun, env, type) do
+    case fun do
+      {_name, meta, context} when is_atom(context)  ->
+        message =
+          """
+          Ambiguous function call `#{Macro.to_string(fun)}` in #{type} pattern with view.
+            Parentheses are required.
+          """
+        raise(CompileError, file: env.file, line: Keyword.get(meta, :line, env.line), description: message)
+
+      _ -> :ok
+    end
+  end
 end

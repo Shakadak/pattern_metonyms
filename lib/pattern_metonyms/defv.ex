@@ -15,7 +15,8 @@ defmodule PatternMetonyms.Defv do
         # def name(arg1, argN) do
         #   PatternMetonyms.view {arg1, argN} do
         #     clause1 -> expr1
-        #     clause 2 -> expr2
+        #     ...
+        #     clauseN -> exprN
         #   end
         # end
         quote do
@@ -27,15 +28,11 @@ defmodule PatternMetonyms.Defv do
         end
         #|> IO.inspect(label: "builder result")
         #|> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
-
     end
   end
 
   def streamline(call, body, rest) do
     import Circe
-
-    #_ = IO.inspect(call, label: "streamline call")
-    #    |> case do x -> _ = IO.puts(Macro.to_string(x)) ; x end
 
     body = case rest do
       [] -> body
@@ -51,6 +48,7 @@ defmodule PatternMetonyms.Defv do
           unquote_splicing(args) when unquote(guards) -> unquote(body)
         end)
         {name, Enum.count(args), clause}
+
       ~m/#{name}(#{...args})/ ->
         clause = Builder.unwrap_clause(quote do
           unquote_splicing(args) -> unquote(body)

@@ -311,10 +311,7 @@ defmodule PatternMetonyms do
   ```
   """
   defmacro defv(call, _expr = [{:do, body} | rest]) do
-    call = case call do
-      {name, meta, nil} -> {name, meta, []}
-      call -> call
-    end
+    call = PatternMetonyms.Builder.normalize_parens(call)
     x = PatternMetonyms.Defv.streamline(call, body, rest)
     attribute = :defv_accumulator
     _ = Module.register_attribute(__CALLER__.module, attribute, accumulate: true)
