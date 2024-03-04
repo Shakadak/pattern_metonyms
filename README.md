@@ -33,15 +33,15 @@ You can use it raw:
 - when you want to push something, just cons an element: `new_stack = [x | stack]`
 - when you want to pop something, just unconse an element: `[x | new_stack] = stack`
 
-We can improve the code by using functions, in order to give names to the operations.
-This is useful because it gives us a vocabulary, thus when we encounter the code,
+We can improve the code by using functions, in order to give names to the operations.  
+This is useful because it gives us a vocabulary, thus when we encounter the code,  
 we don't have to refer to the context, or hold it in our head in order to follow the code:
 - when you want to push something, just call the appropriate function: `new_stack = Stack.push(stack, x)`
-- when you want to pop something, call the appropriate function and match on the result: `{x, new_stack} = Stack.pop(stack)`
+- when you want to pop something, call the appropriate function and match on the result: `{x, new_stack} = Stack.pop(stack)`  
 This also has the advantage of functions being first class values, you can pass them around.
 
-But has seen, we have to match while knowing what the result of the function will look like.
-This is fine but it still presents some overhead, both in the execution compared to the raw version, and in the expressivity because of the necessity to match on the tuple.
+But has seen, we have to match while knowing what the result of the function will look like.  
+This is fine but it still presents some overhead, both in the execution compared to the raw version, and in the expressivity because of the necessity to match on the tuple.  
 
 This slight expressivity impediment become more apparent when we want to use pattern matching to control the flow of execution (unless you define more functions to expand the vocabulary of what's possible).
 Suppose you want to evaluate different expressions depending on if the stack is empty or not:

@@ -368,6 +368,22 @@ defmodule PatternMetonyms do
       42
 
       iex> import PatternMetonyms
+      ...> fit do
+      ...>   (Kernel.+(1) -> x) = 1
+      ...>   (Kernel.+(1) -> y) = x
+      ...> end
+      ...> x + y
+      5
+
+      iex> import PatternMetonyms
+      ...> fit do
+      ...>   x = 1
+      ...>   y = x
+      ...> end
+      ...> x + y
+      2
+
+      iex> import PatternMetonyms
       ...> fit(do: (Kernel.+(1) -> x) = (Kernel.-(1) -> y) = 21)
       ...> x + y
       42
